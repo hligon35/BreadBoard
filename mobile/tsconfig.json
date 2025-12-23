@@ -1,0 +1,19 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["react"],
+    "lib": ["ES2020"],
+    "jsx": "react-jsx",
+    "moduleResolution": "Bundler",
+    "baseUrl": "..",
+    "paths": {
+      "@app/*": ["app/*"],
+      "@ui/*": ["ui/*"]
+    }
+  },
+  "include": [
+    "src/**/*",
+    "../app/**/*",
+    "../ui/**/*"
+  ]
+}

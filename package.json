@@ -1,0 +1,27 @@
+{
+  "name": "bread-board",
+  "version": "0.0.1",
+  "private": true,
+  "workspaces": [
+    "mobile",
+    "web"
+  ],
+  "dependencies": {
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "overrides": {
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "scripts": {
+    "mobile": "npm --workspace mobile run start",
+    "mobile:android": "npm --workspace mobile run android",
+    "mobile:ios": "npm --workspace mobile run ios",
+    "mobile:web": "npm --workspace mobile run web",
+    "web": "npm --workspace web run dev",
+    "web:build": "npm --workspace web run build",
+    "web:preview": "npm --workspace web run preview",
+    "typecheck": "npm --workspace web run typecheck && npm --workspace mobile run typecheck"
+  }
+}
