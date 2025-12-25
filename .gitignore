@@ -1,1 +1,6 @@
 node_modules
+
+# Expo local state (machine-specific)
+mobile/.expo/
+.expo/
+.expo-shared/

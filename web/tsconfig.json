@@ -13,5 +13,11 @@
     "src/**/*",
     "../app/**/*",
     "../ui/**/*"
+  ],
+  "exclude": [
+    "../app/**/*.native.*",
+    "../app/navigation/mobile/**",
+    "../ui/native/**",
+    "../mobile/**"
   ]
 }

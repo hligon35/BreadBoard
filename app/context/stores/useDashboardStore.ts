@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { WidgetLayoutItem, WidgetPreset } from "@app/widgets/widgetTypes";
+import type { WidgetLayoutItem, WidgetPreset, WidgetTypeKey } from "@app/widgets/widgetTypes";
 import { defaultDashboardPreset } from "@app/widgets/presets";
 
 type DashboardState = {
@@ -7,7 +7,7 @@ type DashboardState = {
   setPreset: (preset: WidgetPreset) => void;
   setLayout: (layout: WidgetLayoutItem[]) => void;
   removeWidget: (id: string) => void;
-  addWidget: (type: string) => void;
+  addWidget: (type: WidgetTypeKey) => void;
   setWidgetSize: (id: string, size: "S" | "M" | "L") => void;
 };
 

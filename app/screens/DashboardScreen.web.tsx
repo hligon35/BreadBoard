@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
-import { Button, Card, Chip, Col, H1, H2, Modal, Muted, Row } from "@ui/web";
+import { Button, Card, Col, H1, H2, Modal, Muted, Row } from "@ui/web";
 
 import { useUserStore } from "@app/context/stores/useUserStore";
 import { useThemeStore } from "@app/context/stores/useThemeStore";
@@ -17,6 +17,27 @@ const Select = styled.select`
 
 const TopSpace = styled.div`
   margin-top: ${({ theme }) => theme.spacing.sm}px;
+`;
+
+const GlanceRow = styled.div`
+  display: flex;
+  gap: ${({ theme }) => theme.spacing.sm}px;
+  overflow-x: auto;
+  padding-bottom: ${({ theme }) => theme.spacing.xs}px;
+`;
+
+const GlanceBlock = styled.div`
+  flex: 0 0 auto;
+  padding: ${({ theme }) => theme.spacing.sm}px;
+  border-radius: ${({ theme }) => theme.radius.md}px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surface};
+  display: flex;
+  flex-direction: column;
+`;
+
+const GlanceLabel = styled.div`
+  color: ${({ theme }) => theme.colors.mutedText};
 `;
 
 export function DashboardScreen() {
@@ -61,12 +82,24 @@ export function DashboardScreen() {
         </Row>
       </Row>
 
-      <Row>
-        <Chip>Invoices: 2 due</Chip>
-        <Chip>Cashflow: +$7.1k (30d)</Chip>
-        <Chip>Tasks: 13 open</Chip>
-        <Chip>Tax: 21 days</Chip>
-      </Row>
+      <GlanceRow>
+        <GlanceBlock>
+          <GlanceLabel>Invoices</GlanceLabel>
+          <div>2 due</div>
+        </GlanceBlock>
+        <GlanceBlock>
+          <GlanceLabel>Cashflow</GlanceLabel>
+          <div>+$7.1k (30d)</div>
+        </GlanceBlock>
+        <GlanceBlock>
+          <GlanceLabel>Tasks</GlanceLabel>
+          <div>13 open</div>
+        </GlanceBlock>
+        <GlanceBlock>
+          <GlanceLabel>Tax</GlanceLabel>
+          <div>21 days</div>
+        </GlanceBlock>
+      </GlanceRow>
 
       <Card>
         <Row style={{ justifyContent: "space-between" }}>
