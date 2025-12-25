@@ -2,6 +2,7 @@ import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createDrawerNavigator } from "@react-navigation/drawer";
+import { Ionicons } from "@expo/vector-icons";
 
 import { DashboardScreen } from "@app/screens/DashboardScreen.native";
 import { MoneyScreen } from "@app/screens/MoneyScreen.native";
@@ -37,7 +38,25 @@ function MoreDrawer() {
 export function MobileRootNavigator() {
   return (
     <NavigationContainer>
-      <Tabs.Navigator>
+      <Tabs.Navigator
+        screenOptions={({ route }) => ({
+          headerShown: false,
+          tabBarIcon: ({ color, size, focused }) => {
+            const iconName =
+              route.name === "Home"
+                ? (focused ? "home" : "home-outline")
+                : route.name === "Money"
+                ? (focused ? "cash" : "cash-outline")
+                : route.name === "Work"
+                ? (focused ? "briefcase" : "briefcase-outline")
+                : route.name === "Clients"
+                ? (focused ? "people" : "people-outline")
+                : (focused ? "menu" : "menu-outline");
+
+            return <Ionicons name={iconName as any} size={size} color={color} />;
+          },
+        })}
+      >
         <Tabs.Screen name="Home" component={DashboardScreen} />
         <Tabs.Screen name="Money" component={MoneyScreen} />
         <Tabs.Screen name="Work" component={WorkScreen} />

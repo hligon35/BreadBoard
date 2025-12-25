@@ -8,12 +8,20 @@
     "baseUrl": "..",
     "paths": {
       "@app/*": ["app/*"],
-      "@ui/*": ["ui/*"]
+      "@ui/*": ["ui/*"],
+      "react-native": ["mobile/node_modules/react-native"],
+      "react-native/*": ["mobile/node_modules/react-native/*"],
+      "@react-navigation/drawer": ["mobile/node_modules/@react-navigation/drawer"]
     }
   },
   "include": [
     "src/**/*",
     "../app/**/*",
     "../ui/**/*"
+  ],
+  "exclude": [
+    "../app/**/*.web.*",
+    "../ui/web/**",
+    "../web/**"
   ]
 }

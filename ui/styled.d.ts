@@ -9,3 +9,12 @@ declare module "styled-components" {
     };
   }
 }
+
+declare module "styled-components/native" {
+  export interface DefaultTheme extends AppTheme {
+    a11y?: {
+      largeText: boolean;
+      highContrast: boolean;
+    };
+  }
+}

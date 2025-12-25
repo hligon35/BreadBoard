@@ -6,6 +6,9 @@ export type InsightsOverview = {
   profitabilityScore: number;
   efficiencyScore: number;
   gamificationLevel: number;
+  nextBadgeLabel: string;
+  nextBadgeProgress: number; // 0..1
+  earnedBadges: string[];
 };
 
 type InsightsState = {

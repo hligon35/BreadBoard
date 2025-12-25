@@ -6,6 +6,9 @@ export async function getMockInsightsOverview(): Promise<InsightsOverview> {
     profitabilityScore: 82,
     efficiencyScore: 73,
     gamificationLevel: 4,
+    nextBadgeLabel: "Gold Ops",
+    nextBadgeProgress: 0.73,
+    earnedBadges: ["Consistent Invoicer", "Fast Responder", "Profit Positive", "On-Time Delivery"],
   };
 }
 

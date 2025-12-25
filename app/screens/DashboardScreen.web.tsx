@@ -19,6 +19,42 @@ const TopSpace = styled.div`
   margin-top: ${({ theme }) => theme.spacing.sm}px;
 `;
 
+const MenuWrap = styled.div`
+  position: relative;
+`;
+
+const IconButton = styled.button`
+  border-radius: ${({ theme }) => theme.radius.sm}px;
+  padding: 8px 10px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: transparent;
+  color: ${({ theme }) => theme.colors.text};
+  cursor: pointer;
+`;
+
+const Menu = styled.div`
+  position: absolute;
+  top: calc(100% + ${({ theme }) => theme.spacing.xs}px);
+  right: 0;
+  min-width: 140px;
+  border-radius: ${({ theme }) => theme.radius.md}px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surface};
+  padding: ${({ theme }) => theme.spacing.xs}px;
+  z-index: 20;
+`;
+
+const MenuItem = styled.button<{ $danger?: boolean }>`
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: ${({ theme }) => theme.spacing.sm}px;
+  border-radius: ${({ theme }) => theme.radius.sm}px;
+  cursor: pointer;
+  color: ${({ theme, $danger }) => ($danger ? theme.colors.danger : theme.colors.text)};
+`;
+
 const GlanceRow = styled.div`
   display: flex;
   gap: ${({ theme }) => theme.spacing.sm}px;
@@ -48,6 +84,8 @@ export function DashboardScreen() {
 
   const [presets, setPresets] = useState<WidgetPreset[]>([]);
   const [libraryOpen, setLibraryOpen] = useState(false);
+  const [widgetsMenuOpen, setWidgetsMenuOpen] = useState(false);
+  const [widgetMode, setWidgetMode] = useState<"default" | "move" | "delete">("default");
 
   useEffect(() => {
     listMockPresets().then(setPresets);
@@ -76,9 +114,44 @@ export function DashboardScreen() {
           >
             Theme: {mode}
           </Button>
-          <Button variant="primary" onClick={() => setLibraryOpen(true)}>
-            Add widgets
-          </Button>
+          <MenuWrap>
+            <IconButton
+              aria-label="Widget actions"
+              onClick={() => setWidgetsMenuOpen((v) => !v)}
+            >
+              ⋯
+            </IconButton>
+            {widgetsMenuOpen ? (
+              <Menu>
+                <MenuItem
+                  onClick={() => {
+                    setWidgetsMenuOpen(false);
+                    setWidgetMode("default");
+                    setLibraryOpen(true);
+                  }}
+                >
+                  Add
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    setWidgetsMenuOpen(false);
+                    setWidgetMode((m) => (m === "move" ? "default" : "move"));
+                  }}
+                >
+                  {widgetMode === "move" ? "Stop moving" : "Move"}
+                </MenuItem>
+                <MenuItem
+                  $danger
+                  onClick={() => {
+                    setWidgetsMenuOpen(false);
+                    setWidgetMode((m) => (m === "delete" ? "default" : "delete"));
+                  }}
+                >
+                  {widgetMode === "delete" ? "Stop deleting" : "Delete"}
+                </MenuItem>
+              </Menu>
+            ) : null}
+          </MenuWrap>
         </Row>
       </Row>
 
@@ -137,7 +210,7 @@ export function DashboardScreen() {
         </Row>
 
         <TopSpace>
-          <WidgetGridWeb />
+          <WidgetGridWeb mode={widgetMode} />
         </TopSpace>
       </Card>
 
