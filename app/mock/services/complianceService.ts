@@ -5,6 +5,8 @@ export async function getMockComplianceOverview(): Promise<ComplianceOverview> {
     nextFilingLabel: "Quarterly Estimated Tax",
     daysRemaining: 21,
     openItems: 3,
+    estimatedTaxDue: 12500,
+    estimatedTaxPaid: 8400,
   };
 }
 

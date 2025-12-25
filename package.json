@@ -7,20 +7,26 @@
     "web"
   ],
   "dependencies": {
+    "@react-navigation/bottom-tabs": "^7.9.0",
+    "@react-navigation/drawer": "^7.7.10",
+    "@react-navigation/native": "^7.1.26",
+    "@react-navigation/native-stack": "^7.9.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "react-native-worklets": "0.5.1"
+    "react-native": "0.81.5"
   },
   "overrides": {
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "@types/react": "19.2.7",
-    "@types/react-dom": "19.2.3",
-    "react-native-worklets": "0.5.1",
-    "react-native-reanimated": "4.1.6"
+    "react-native": "0.81.5"
   },
   "scripts": {
     "mobile": "npm --workspace mobile run start",
+    "mobile:clear": "npm --workspace mobile run start:clear",
+    "mobile:dev-client": "npm --workspace mobile run start:dev-client",
+    "mobile:dev-client:clear": "npm --workspace mobile run start:dev-client:clear",
+    "mobile:go": "npm --workspace mobile run start:go",
+    "mobile:go:clear": "npm --workspace mobile run start:go:clear",
     "mobile:android": "npm --workspace mobile run android",
     "mobile:ios": "npm --workspace mobile run ios",
     "mobile:web": "npm --workspace mobile run web",

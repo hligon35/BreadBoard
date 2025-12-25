@@ -1,6 +1,14 @@
 import { create } from "zustand";
 import { getMockInsightsOverview } from "@app/mock/services/analyticsService";
 
+export type AISuggestion = {
+  id: string;
+  category: "Finance" | "Clients" | "Workflow";
+  title: string;
+  detail: string;
+  actionLabel: string;
+};
+
 export type InsightsOverview = {
   revenueTrend: "up" | "down" | "flat";
   profitabilityScore: number;
@@ -9,6 +17,7 @@ export type InsightsOverview = {
   nextBadgeLabel: string;
   nextBadgeProgress: number; // 0..1
   earnedBadges: string[];
+  aiSuggestions: AISuggestion[];
 };
 
 type InsightsState = {

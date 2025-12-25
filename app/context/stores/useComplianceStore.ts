@@ -5,6 +5,8 @@ export type ComplianceOverview = {
   nextFilingLabel: string;
   daysRemaining: number;
   openItems: number;
+  estimatedTaxDue: number;
+  estimatedTaxPaid: number;
 };
 
 type ComplianceState = {

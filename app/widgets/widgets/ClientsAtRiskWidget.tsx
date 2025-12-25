@@ -4,6 +4,7 @@ import { useUserStore } from "@app/context/stores/useUserStore";
 import { formatCurrency } from "@app/utils/format";
 
 type Tone = "danger" | "warning" | "success";
+type RiskLevel = "high" | "medium" | "low";
 
 export function ClientsAtRiskWidget({
   Text,
@@ -25,64 +26,85 @@ export function ClientsAtRiskWidget({
   }, [clients.length, refresh]);
 
   const top = useMemo(() => {
-    const toneForStatus = (status: string): Tone => {
-      if (status === "at_risk") return "danger";
-      if (status === "inactive") return "warning";
+    const riskFor = (status: string, riskLevel?: RiskLevel): RiskLevel => {
+      if (riskLevel) return riskLevel;
+      if (status === "at_risk") return "high";
+      if (status === "inactive") return "medium";
+      return "low";
+    };
+
+    const toneForRisk = (risk: RiskLevel): Tone => {
+      if (risk === "high") return "danger";
+      if (risk === "medium") return "warning";
       return "success";
     };
 
-    const rank = (status: string) => {
-      const tone = toneForStatus(status);
-      if (tone === "danger") return 0;
-      if (tone === "warning") return 1;
-      return 2;
-    };
+    const rank = (risk: RiskLevel) => (risk === "high" ? 0 : risk === "medium" ? 1 : 2);
 
     return [...clients]
-      .sort((a, b) => rank(a.status) - rank(b.status))
-      .slice(0, 4)
-      .map((c) => ({
-        id: c.id,
-        name: c.name,
-        status: c.status,
-        tone: toneForStatus(c.status),
-        lastInvoiceAmount: c.lastInvoiceAmount,
-      }));
+      .map((c) => {
+        const risk = riskFor(c.status, c.riskLevel);
+        return {
+          id: c.id,
+          name: c.name,
+          status: c.status,
+          risk,
+          tone: toneForRisk(risk),
+          reason: c.riskReason,
+          lastInvoiceAmount: c.lastInvoiceAmount,
+        };
+      })
+      .filter((c) => c.risk !== "low")
+      .sort((a, b) => {
+        const dr = rank(a.risk) - rank(b.risk);
+        if (dr !== 0) return dr;
+        return b.lastInvoiceAmount - a.lastInvoiceAmount;
+      })
+      .slice(0, 4);
   }, [clients]);
 
   const Strong = StrongText ?? Text;
   const WrapRow = Row;
   const WrapTag = Tag;
 
-  const labelFor = (status: string) => {
-    if (status === "at_risk") return "At risk";
-    if (status === "inactive") return "Inactive";
-    return "Active";
+  const labelForRisk = (risk: RiskLevel) => {
+    if (risk === "high") return "High";
+    if (risk === "medium") return "Medium";
+    return "Low";
   };
 
-  const countAtRisk = useMemo(
-    () => clients.filter((c) => c.status === "at_risk").length,
-    [clients]
-  );
+  const needsAttentionCount = useMemo(() => {
+    const riskFor = (status: string, riskLevel?: RiskLevel): RiskLevel => {
+      if (riskLevel) return riskLevel;
+      if (status === "at_risk") return "high";
+      if (status === "inactive") return "medium";
+      return "low";
+    };
+    return clients.filter((c) => riskFor(c.status, c.riskLevel) !== "low").length;
+  }, [clients]);
+
+  const moreCount = Math.max(0, needsAttentionCount - top.length);
 
   return (
     <>
-      <Text>{countAtRisk} at-risk clients</Text>
+      <Text>{needsAttentionCount ? `${needsAttentionCount} clients need attention` : "No clients need attention"}</Text>
       {top.map((c) => (
         <React.Fragment key={c.id}>
           {WrapRow && WrapTag ? (
             <WrapRow>
-              <WrapTag tone={c.tone}>{labelFor(c.status)}</WrapTag>
+              <WrapTag tone={c.tone}>{labelForRisk(c.risk)}</WrapTag>
               <Strong>{c.name}</Strong>
             </WrapRow>
           ) : (
             <Text>
-              • {labelFor(c.status)}: {c.name}
+              • {labelForRisk(c.risk)}: {c.name}
             </Text>
           )}
+          {c.reason ? <Text>{c.reason}</Text> : null}
           <Text>Last invoice: {formatCurrency(c.lastInvoiceAmount, currency)}</Text>
         </React.Fragment>
       ))}
+      {moreCount ? <Text>+{moreCount} more</Text> : null}
     </>
   );
 }

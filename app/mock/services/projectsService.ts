@@ -1,4 +1,4 @@
-import type { WorkSummary } from "@app/context/stores/useWorkStore";
+import type { KanbanBoard, WorkSummary } from "@app/context/stores/useWorkStore";
 
 export async function getMockWorkSummary(): Promise<WorkSummary> {
   return {
@@ -8,7 +8,7 @@ export async function getMockWorkSummary(): Promise<WorkSummary> {
   };
 }
 
-export async function getMockKanbanBoard() {
+export async function getMockKanbanBoard(): Promise<KanbanBoard> {
   return {
     columns: [
       {
@@ -21,7 +21,7 @@ export async function getMockKanbanBoard() {
       },
       {
         key: "doing",
-        title: "In progress",
+        title: "Doing",
         cards: [{ id: "k3", title: "Build dashboard widgets", meta: "Bread Board" }],
       },
       {

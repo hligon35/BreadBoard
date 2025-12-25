@@ -1,13 +1,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import { Card, Muted, Row } from "@ui/web";
-import { Button } from "@ui/web";
-import type { WidgetSize } from "./widgetTypes";
 import type { CategoryKey } from "@app/theme/tokens";
-
-const Select = styled.select`
-  margin-left: ${({ theme }) => theme.spacing.xs}px;
-`;
 
 const TopSpace = styled.div`
   margin-top: ${({ theme }) => theme.spacing.xs}px;
@@ -72,24 +66,20 @@ export function WidgetContainerWeb({
   title,
   category,
   description,
-  size,
   span,
   isDragSource,
   onDelete,
   onMove,
-  onResize,
   draggableProps,
   children,
 }: {
   title: string;
   category: CategoryKey;
   description?: string;
-  size: WidgetSize;
   span: number;
   isDragSource?: boolean;
   onDelete: () => void;
   onMove: () => void;
-  onResize: (size: WidgetSize) => void;
   draggableProps?: React.HTMLAttributes<HTMLDivElement>;
   children: React.ReactNode;
 }) {
@@ -104,14 +94,6 @@ export function WidgetContainerWeb({
           {description ? <Muted>{description}</Muted> : null}
         </div>
         <Row>
-          <label>
-            <Muted>Size</Muted>
-            <Select value={size} onChange={(e) => onResize(e.target.value as WidgetSize)}>
-              <option value="S">S</option>
-              <option value="M">M</option>
-              <option value="L">L</option>
-            </Select>
-          </label>
           <MenuWrap>
             <IconButton aria-label="Card actions" onClick={() => setOpen((v) => !v)}>
               ⋯

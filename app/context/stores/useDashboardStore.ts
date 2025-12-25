@@ -8,7 +8,6 @@ type DashboardState = {
   setLayout: (layout: WidgetLayoutItem[]) => void;
   removeWidget: (id: string) => void;
   addWidget: (type: WidgetTypeKey) => void;
-  setWidgetSize: (id: string, size: "S" | "M" | "L") => void;
 };
 
 export const useDashboardStore = create<DashboardState>((set) => ({
@@ -25,13 +24,6 @@ export const useDashboardStore = create<DashboardState>((set) => ({
           ...s.preset.layout,
           { id: `${type}_${Date.now()}`, type, size: "M" as const },
         ],
-      },
-    })),
-  setWidgetSize: (id, size) =>
-    set((s) => ({
-      preset: {
-        ...s.preset,
-        layout: s.preset.layout.map((w) => (w.id === id ? { ...w, size } : w)),
       },
     })),
 }));

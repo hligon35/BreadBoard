@@ -6,6 +6,8 @@ export type Client = {
   name: string;
   status: "active" | "at_risk" | "inactive";
   lastInvoiceAmount: number;
+  riskLevel?: "low" | "medium" | "high";
+  riskReason?: string;
 };
 
 type ClientsState = {

@@ -32,3 +32,17 @@ export async function getMockBudgets() {
     { id: "bud_3", category: "Ops", limit: 300, spent: 220 },
   ];
 }
+
+export async function getMockCashFlowSeries() {
+  // Simple forward-looking cash flow bands (inflow/outflow) for the next ~8 weeks.
+  return [
+    { label: "W1", inflow: 1200, outflow: 430 },
+    { label: "W2", inflow: 980, outflow: 510 },
+    { label: "W3", inflow: 1550, outflow: 620 },
+    { label: "W4", inflow: 800, outflow: 740 },
+    { label: "W5", inflow: 1700, outflow: 880 },
+    { label: "W6", inflow: 1100, outflow: 920 },
+    { label: "W7", inflow: 1400, outflow: 1050 },
+    { label: "W8", inflow: 900, outflow: 1120 },
+  ];
+}

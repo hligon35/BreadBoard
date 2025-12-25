@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { getMockMoneyOverview } from "@app/mock/services/accountingService";
+import { getMockBudgets, getMockCashFlowSeries, getMockMoneyOverview } from "@app/mock/services/accountingService";
 
 export type MoneyOverview = {
   incomeYTD: number;
@@ -8,15 +8,36 @@ export type MoneyOverview = {
   taxReserve: number;
 };
 
+export type BudgetItem = {
+  id: string;
+  category: string;
+  limit: number;
+  spent: number;
+};
+
+export type CashFlowPoint = {
+  label: string;
+  inflow: number;
+  outflow: number;
+};
+
 type MoneyState = {
   overview: MoneyOverview | null;
+  budgets: BudgetItem[];
+  cashFlow: CashFlowPoint[];
   refresh: () => Promise<void>;
 };
 
 export const useMoneyStore = create<MoneyState>((set) => ({
   overview: null,
+  budgets: [],
+  cashFlow: [],
   refresh: async () => {
-    const data = await getMockMoneyOverview();
-    set({ overview: data });
+    const [overview, budgets, cashFlow] = await Promise.all([
+      getMockMoneyOverview(),
+      getMockBudgets(),
+      getMockCashFlowSeries(),
+    ]);
+    set({ overview, budgets, cashFlow });
   },
 }));

@@ -1,7 +1,5 @@
 import React from "react";
 import { Card, Muted, Row } from "@ui/native";
-import { Button } from "@ui/native";
-import type { WidgetSize } from "./widgetTypes";
 import styled from "styled-components/native";
 import type { CategoryKey } from "@app/theme/tokens";
 
@@ -23,15 +21,11 @@ export function WidgetContainerNative({
   title,
   category,
   description,
-  size,
-  onResize,
   children,
 }: {
   title: string;
   category: CategoryKey;
   description?: string;
-  size: WidgetSize;
-  onResize: (size: WidgetSize) => void;
   children: React.ReactNode;
 }) {
   return (
@@ -39,9 +33,6 @@ export function WidgetContainerNative({
       <AccentBar $category={category} />
       <Row style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
         <Title>{title}</Title>
-        <Row>
-          <Button title={`Size: ${size}`} onPress={() => onResize(size === "S" ? "M" : size === "M" ? "L" : "S")} />
-        </Row>
       </Row>
       {description ? <Muted>{description}</Muted> : null}
       <Row style={{ marginTop: 10, alignItems: "flex-start" }}>{children}</Row>

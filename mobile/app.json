@@ -3,9 +3,27 @@
     "name": "Bread Board",
     "slug": "bread-board",
     "version": "0.0.1",
+    "icon": "./assets/icon.png",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-    "platforms": ["ios", "android", "web"],
-    "assetBundlePatterns": ["**/*"]
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "7018ef7c-c033-4713-8590-929d110ba453"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.ownerligon.breadboard",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
   }
 }

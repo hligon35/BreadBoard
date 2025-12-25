@@ -1,8 +1,8 @@
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import styled from "styled-components";
 
-import { Page, Shell, Sidebar, Main, H2, Muted, Row } from "@ui/web";
+import { Page, Shell, Sidebar, Main, H2, Muted, Row, TopStack } from "@ui/web";
 
 const NavList = styled.div`
   display: flex;
@@ -25,6 +25,26 @@ const Item = styled(NavLink)`
 `;
 
 export function WebShell({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+  const title =
+    location.pathname === "/dashboard"
+      ? "Dashboard"
+      : location.pathname === "/money"
+      ? "Money"
+      : location.pathname === "/work"
+      ? "Work"
+      : location.pathname === "/clients"
+      ? "Clients"
+      : location.pathname === "/compliance"
+      ? "Compliance"
+      : location.pathname === "/insights"
+      ? "Insights"
+      : location.pathname === "/marketplace"
+      ? "Marketplace"
+      : location.pathname === "/settings"
+      ? "Settings"
+      : "Bread Board";
+
   return (
     <Page>
       <Shell>
@@ -46,7 +66,10 @@ export function WebShell({ children }: { children: React.ReactNode }) {
             <Item to="/settings">Settings</Item>
           </NavList>
         </Sidebar>
-        <Main>{children}</Main>
+        <Main>
+          <TopStack title={title} />
+          {children}
+        </Main>
       </Shell>
     </Page>
   );

@@ -3,6 +3,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import { Ionicons } from "@expo/vector-icons";
+import { TopStack } from "@ui/native";
 
 import { DashboardScreen } from "@app/screens/DashboardScreen.native";
 import { MoneyScreen } from "@app/screens/MoneyScreen.native";
@@ -40,7 +41,22 @@ export function MobileRootNavigator() {
     <NavigationContainer>
       <Tabs.Navigator
         screenOptions={({ route }) => ({
-          headerShown: false,
+          headerShown: true,
+          header: () => (
+            <TopStack
+              title={
+                route.name === "Home"
+                  ? "Dashboard"
+                  : route.name === "Money"
+                  ? "Money"
+                  : route.name === "Work"
+                  ? "Work"
+                  : route.name === "Clients"
+                  ? "Clients"
+                  : "More"
+              }
+            />
+          ),
           tabBarIcon: ({ color, size, focused }) => {
             const iconName =
               route.name === "Home"
