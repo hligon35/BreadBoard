@@ -3,6 +3,8 @@ import styled, { useTheme } from "styled-components";
 
 import { Button, Muted, TopStack } from "@ui/web";
 import { useDashboardStore } from "@app/context/stores/useDashboardStore";
+import { useClientsStore } from "@app/context/stores/useClientsStore";
+import { useWorkStore } from "@app/context/stores/useWorkStore";
 import { widgetCatalog } from "./widgetTypes";
 import type { WidgetLayoutItem, WidgetSize } from "./widgetTypes";
 import { WidgetContainerWeb } from "./WidgetContainer.web";
@@ -23,6 +25,8 @@ const Grid = styled.div`
 
 const Clickable = styled.div`
   cursor: pointer;
+  display: block;
+  width: 100%;
 `;
 
 const Ring = styled.div<{ $deg: number; $color: string }>`
@@ -117,7 +121,7 @@ const StatBody = styled.div`
 const StatPillWrap = styled.div`
   flex: 1 1 0;
   min-width: 0;
-  padding: ${({ theme }) => theme.spacing.sm}px;
+  padding: ${({ theme }) => theme.spacing.xs}px;
   border-radius: ${({ theme }) => theme.radius.md}px;
   background: ${({ theme }) => theme.colors.bg};
   border: 1px solid ${({ theme }) => theme.colors.border};
@@ -125,12 +129,39 @@ const StatPillWrap = styled.div`
   flex-direction: column;
   align-items: center;
   text-align: center;
+  position: relative;
+`;
+
+const StatPillHeaderRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: ${({ theme }) => theme.spacing.xs}px;
+  width: 100%;
+  min-width: 0;
+  flex-wrap: nowrap;
+  overflow: hidden;
+`;
+
+const StatPillCornerBadge = styled.div`
+  position: absolute;
+  top: -10px;
+  right: -4px;
+  padding: 1px 1px;
+  border-radius: ${({ theme }) => theme.radius.sm}px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.mutedText};
+  font-size: 12px;
+  font-weight: 700;
 `;
 
 const StatPillLabel = styled.div`
   color: ${({ theme }) => theme.colors.mutedText};
   font-size: 12px;
   text-align: center;
+  white-space: nowrap;
+  flex: 0 0 auto;
 `;
 
 const StatPillValue = styled.div<{ $tone?: "neutral" | "success" | "danger" }>`
@@ -138,6 +169,8 @@ const StatPillValue = styled.div<{ $tone?: "neutral" | "success" | "danger" }>`
   color: ${({ theme, $tone }) =>
     $tone === "success" ? theme.colors.success : $tone === "danger" ? theme.colors.danger : theme.colors.text};
   text-align: center;
+  white-space: nowrap;
+  flex: 0 1 auto;
 `;
 
 const StatPillHint = styled.div`
@@ -151,6 +184,13 @@ const InlineRow = styled.div`
   display: flex;
   align-items: center;
   gap: ${({ theme }) => theme.spacing.sm}px;
+`;
+
+const InlineCol = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: ${({ theme }) => theme.spacing.xs}px;
 `;
 
 const ToneTag = styled.span<{ $tone: "danger" | "warning" | "success" }>`
@@ -289,22 +329,154 @@ const KanbanCardMeta = styled.div`
   text-overflow: ellipsis;
 `;
 
-const AiStackWrap = styled.div`
-  position: relative;
-  height: 150px;
+const KanbanProgressTrack = styled.div`
+  margin-top: ${({ theme }) => theme.spacing.xs}px;
+  height: 6px;
+  border-radius: 999px;
+  background: ${({ theme }) => theme.colors.border};
+  overflow: hidden;
+`;
+
+const KanbanProgressFill = styled.div`
+  height: 100%;
+  border-radius: 999px;
+  background: ${({ theme }) => theme.colors.primary};
+`;
+
+const KanbanTileTop = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: ${({ theme }) => theme.spacing.xs}px;
+`;
+
+const KanbanTileMetaRow = styled.div`
+  margin-top: ${({ theme }) => theme.spacing.xs}px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: ${({ theme }) => theme.spacing.xs}px;
+`;
+
+const KanbanAvatar = styled.div`
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: ${({ theme }) => theme.colors.bg};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  flex: 0 0 auto;
+`;
+
+const KanbanAvatarText = styled.div`
+  color: ${({ theme }) => theme.colors.mutedText};
+  font-size: 10px;
+  font-weight: 700;
+`;
+
+const BoardWrap = styled.div`
   margin-top: ${({ theme }) => theme.spacing.sm}px;
+  margin-left: ${({ theme }) => -theme.spacing.lg}px;
+  margin-right: ${({ theme }) => -theme.spacing.lg}px;
+`;
+
+const BoardRow = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing.sm}px;
+`;
+
+const BoardCol = styled.div<{ $active?: boolean }>`
+  border-radius: ${({ theme }) => theme.radius.md}px;
+  background: ${({ theme, $active }) => ($active ? theme.colors.surface : theme.colors.bg)};
+  border: 1px solid ${({ theme, $active }) => ($active ? theme.colors.primary : theme.colors.border)};
+  padding: ${({ theme }) => theme.spacing.sm}px;
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing.xs}px;
+  min-width: 0;
+`;
+
+const BoardTilesWrap = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing.xs}px;
+`;
+
+const BoardTile = styled.div<{ $dragging?: boolean }>`
+  border-radius: ${({ theme }) => theme.radius.sm}px;
+  background: ${({ theme }) => theme.colors.surface};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  padding: ${({ theme }) => theme.spacing.xs}px;
+  opacity: ${({ $dragging }) => ($dragging ? 0.55 : 1)};
+  cursor: grab;
+  user-select: none;
+`;
+
+const GanttWrap = styled.div`
+  margin-top: ${({ theme }) => theme.spacing.sm}px;
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing.xs}px;
+  margin-left: ${({ theme }) => -theme.spacing.lg}px;
+  margin-right: ${({ theme }) => -theme.spacing.lg}px;
+`;
+
+const GanttRow = styled.div`
+  border-radius: ${({ theme }) => theme.radius.md}px;
+  background: ${({ theme }) => theme.colors.bg};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  padding: ${({ theme }) => theme.spacing.sm}px;
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing.xs}px;
+  min-width: 0;
+`;
+
+const GanttBarTrack = styled.div`
+  height: 10px;
+  border-radius: 999px;
+  background: ${({ theme }) => theme.colors.border};
+  overflow: hidden;
+  position: relative;
+`;
+
+const GanttBarWindow = styled.div`
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+  background: ${({ theme }) => theme.colors.bg};
+`;
+
+const GanttBarFill = styled.div`
+  height: 100%;
+  border-radius: 999px;
+  background: ${({ theme }) => theme.colors.primary};
+`;
+
+const AiStackWrap = styled.div`
+  display: flex;
+  gap: ${({ theme }) => theme.spacing.sm}px;
+  overflow-x: auto;
+  margin-top: ${({ theme }) => theme.spacing.sm}px;
+  margin-left: ${({ theme }) => -theme.spacing.lg}px;
+  margin-right: ${({ theme }) => -theme.spacing.lg}px;
+  padding-left: ${({ theme }) => theme.spacing.lg}px;
+  padding-right: ${({ theme }) => theme.spacing.lg}px;
 `;
 
 const AiCardBase = styled.div`
-  position: absolute;
-  left: 0;
-  right: 0;
   border-radius: ${({ theme }) => theme.radius.md}px;
   background: ${({ theme }) => theme.colors.surface};
   border: 1px solid ${({ theme }) => theme.colors.border};
   padding: ${({ theme }) => theme.spacing.sm}px;
   user-select: none;
   touch-action: none;
+  min-width: 0;
+  flex: 0 0 calc((100% - ${({ theme }) => theme.spacing.sm}px) / 2);
 `;
 
 const AiTag = styled.div<{ $bg: string }>`
@@ -381,6 +553,9 @@ export function WidgetGridWeb({
   mode?: "default" | "move" | "delete";
 }) {
   const layout = useDashboardStore((s) => s.preset.layout);
+
+  const clients = useClientsStore((s) => s.clients);
+  const workSummary = useWorkStore((s) => s.summary);
   const setLayout = useDashboardStore((s) => s.setLayout);
   const removeWidget = useDashboardStore((s) => s.removeWidget);
 
@@ -388,6 +563,31 @@ export function WidgetGridWeb({
 
   const defs = useMemo(() => new Map(widgetCatalog.map((w) => [w.type, w])), []);
   const theme = useTheme();
+
+  const clientsAtRiskCount = useMemo(() => {
+    const riskFor = (status: string, riskLevel?: string) => {
+      if (riskLevel) return riskLevel;
+      if (status === "at_risk") return "high";
+      if (status === "inactive") return "medium";
+      return "low";
+    };
+    return clients.filter((c) => riskFor((c as any).status, (c as any).riskLevel) === "high").length;
+  }, [clients]);
+
+  const clientsAtRiskMeter = "🟥 🟨 🟩";
+
+  const activeProjectsCount = workSummary?.activeProjects ?? 0;
+
+  const HeaderBadge = styled.span<{ $tone: "danger" | "neutral" }>`
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: ${({ theme }) => theme.radius.sm}px;
+    font-size: 12px;
+    font-weight: 800;
+    color: ${({ theme, $tone }) => ($tone === "danger" ? "#fff" : theme.colors.text)};
+    background: ${({ theme, $tone }) => ($tone === "danger" ? theme.colors.danger : theme.colors.border)};
+  `;
 
   const Text = ({ children }: { children: React.ReactNode }) => <Muted>{children}</Muted>;
   const RingSub = ({ children }: { children: React.ReactNode }) => <RingSubText>{children}</RingSubText>;
@@ -422,7 +622,13 @@ export function WidgetGridWeb({
     );
   };
 
-  const Row = ({ children }: { children: React.ReactNode }) => <InlineRow>{children}</InlineRow>;
+  const Row = ({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) => (
+    <InlineRow style={style}>{children}</InlineRow>
+  );
+
+  const Col = ({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) => (
+    <InlineCol style={style}>{children}</InlineCol>
+  );
   const Tap = ({ onPress, children }: { onPress: () => void; children: React.ReactNode }) => (
     <Clickable
       role="button"
@@ -487,15 +693,29 @@ export function WidgetGridWeb({
     value,
     tone,
     hint,
+    inline,
+    badge,
   }: {
     label: string;
     value: string;
     tone?: "neutral" | "success" | "danger";
     hint?: string;
+    inline?: boolean;
+    badge?: string;
   }) => (
     <StatPillWrap>
-      <StatPillLabel>{label}</StatPillLabel>
-      <StatPillValue $tone={tone}>{value}</StatPillValue>
+      {badge ? <StatPillCornerBadge>{badge}</StatPillCornerBadge> : null}
+      {inline ? (
+        <StatPillHeaderRow>
+          <StatPillLabel>{label}</StatPillLabel>
+          <StatPillValue $tone={tone}>{value}</StatPillValue>
+        </StatPillHeaderRow>
+      ) : (
+        <>
+          <StatPillLabel>{label}</StatPillLabel>
+          <StatPillValue $tone={tone}>{value}</StatPillValue>
+        </>
+      )}
       {hint ? <StatPillHint>{hint}</StatPillHint> : null}
     </StatPillWrap>
   );
@@ -577,18 +797,38 @@ export function WidgetGridWeb({
     );
   };
 
-  const CashFlowChart = ({ points }: { points: Array<{ label: string; inflow: number; outflow: number }> }) => {
+  const CashFlowChart = ({
+    points,
+    compact,
+    showZones,
+    forecastNet,
+  }: {
+    points: Array<{ label: string; inflow: number; outflow: number }>;
+    compact?: boolean;
+    showZones?: boolean;
+    forecastNet?: Array<{ label: string; value: number }>;
+  }) => {
     const W = 100;
-    const H = 96;
+    const H = compact ? 64 : 140;
     const P = 8;
 
     const maxV = Math.max(1, ...points.flatMap((p) => [p.inflow, p.outflow]));
+    const forecastCount = forecastNet?.length ?? 0;
+    const reserve = forecastCount ? Math.min(24, (W - P * 2) * 0.25) : 0;
+    const plotW = (W - P * 2) - reserve;
     const xFor = (i: number) => {
       if (points.length <= 1) return P;
       const t = i / (points.length - 1);
-      return P + t * (W - P * 2);
+      return P + t * plotW;
     };
     const yFor = (v: number) => P + (1 - v / maxV) * (H - P * 2);
+
+    const net = points.map((p) => p.inflow - p.outflow);
+    const netMax = Math.max(1, ...net.map((v) => Math.abs(v)));
+    const yForNet = (v: number) => P + (1 - (v + netMax) / (netMax * 2)) * (H - P * 2);
+
+    const lastIndex = Math.max(0, points.length - 1);
+    const lastX = xFor(lastIndex);
 
     const pathFor = (key: "inflow" | "outflow") =>
       points
@@ -598,19 +838,60 @@ export function WidgetGridWeb({
     const areaFor = (key: "inflow" | "outflow") => {
       const top = points.map((p, i) => `${xFor(i).toFixed(2)},${yFor(p[key]).toFixed(2)}`).join(" L ");
       const bottomY = (H - P).toFixed(2);
-      return `M${P},${bottomY} L ${top} L ${(W - P).toFixed(2)},${bottomY} Z`;
+      const rightX = xFor(Math.max(0, points.length - 1)).toFixed(2);
+      return `M${P},${bottomY} L ${top} L ${rightX},${bottomY} Z`;
+    };
+
+    const forecastNetPath = () => {
+      if (!forecastNet?.length || !reserve) return null;
+      const stepX = reserve / forecastNet.length;
+      const startY = yForNet(net[lastIndex]);
+      const segs = forecastNet.map((f, j) => {
+        const x = lastX + stepX * (j + 1);
+        const y = yForNet(f.value);
+        return `L${x.toFixed(2)},${y.toFixed(2)}`;
+      });
+      return `M${lastX.toFixed(2)},${startY.toFixed(2)} ${segs.join(" ")}`;
     };
 
     const inflow = theme.colors.success;
     const outflow = theme.colors.danger;
 
     return (
-      <CashFlowWrap>
+      <CashFlowWrap style={{ height: H }}>
         <CashFlowSvg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true">
+          {showZones
+            ? points.map((p, i) => {
+              const sliceW = points.length > 1 ? plotW / (points.length - 1) : plotW;
+                const x = xFor(i) - sliceW / 2;
+                const isPos = p.inflow - p.outflow >= 0;
+                return (
+                  <rect
+                    key={`zone_${i}`}
+                    x={x}
+                    y={0}
+                    width={sliceW}
+                    height={H}
+                    fill={isPos ? theme.colors.success : theme.colors.danger}
+                    opacity={0.06}
+                  />
+                );
+              })
+            : null}
           <path d={areaFor("inflow")} fill={inflow} opacity={0.14} />
           <path d={areaFor("outflow")} fill={outflow} opacity={0.12} />
           <path d={pathFor("inflow")} stroke={inflow} strokeWidth={2} fill="none" />
           <path d={pathFor("outflow")} stroke={outflow} strokeWidth={2} fill="none" />
+          {forecastNetPath() ? (
+            <path
+              d={forecastNetPath()!}
+              stroke={theme.colors.mutedText}
+              strokeWidth={2}
+              fill="none"
+              strokeDasharray="6 6"
+              opacity={0.7}
+            />
+          ) : null}
         </CashFlowSvg>
       </CashFlowWrap>
     );
@@ -623,7 +904,7 @@ export function WidgetGridWeb({
       key: "todo" | "doing" | "done";
       title: string;
       count: number;
-      cards: Array<{ id: string; title: string; meta?: string }>;
+      cards: Array<{ id: string; title: string; meta?: string; progress?: number; deadline?: string; avatar?: string }>;
     }>;
   }) => (
     <KanbanRow>
@@ -632,17 +913,191 @@ export function WidgetGridWeb({
           <KanbanHeader>
             {col.title} • {col.count}
           </KanbanHeader>
-          {col.cards.slice(0, 3).map((card) => (
+          {col.cards.slice(0, 2).map((card) => (
             <KanbanCard key={card.id}>
               <KanbanCardTitle title={card.title}>{card.title}</KanbanCardTitle>
               {card.meta ? <KanbanCardMeta title={card.meta}>{card.meta}</KanbanCardMeta> : null}
+              <KanbanProgressTrack>
+                <KanbanProgressFill
+                  style={{
+                    width: `${Math.round(
+                      100 *
+                        (typeof card.progress === "number"
+                          ? Math.max(0, Math.min(1, card.progress))
+                          : col.key === "done"
+                            ? 1
+                            : col.key === "doing"
+                              ? 0.55
+                              : 0.25)
+                    )}%`,
+                  }}
+                />
+              </KanbanProgressTrack>
             </KanbanCard>
           ))}
-          {col.count > 3 ? <KanbanCardMeta>+{col.count - 3} more</KanbanCardMeta> : null}
+          {col.count > 2 ? <KanbanCardMeta>+{col.count - 2} more</KanbanCardMeta> : null}
         </KanbanCol>
       ))}
     </KanbanRow>
   );
+
+  const KanbanBoard = ({
+    columns,
+    onMoveCard,
+  }: {
+    columns: Array<{
+      key: "todo" | "doing" | "done";
+      title: string;
+      cards: Array<{ id: string; title: string; meta?: string; progress?: number; deadline?: string; avatar?: string }>;
+    }>;
+    onMoveCard?: (cardId: string, toColumnKey: "todo" | "doing" | "done") => void;
+  }) => {
+    const [hover, setHover] = useState<"todo" | "doing" | "done" | null>(null);
+    const [dragging, setDragging] = useState<string | null>(null);
+
+    return (
+      <BoardWrap>
+        <BoardRow>
+          {columns.map((col) => (
+            <BoardCol
+              key={col.key}
+              $active={hover === col.key}
+              onDragOver={(e) => {
+                e.preventDefault();
+                if (hover !== col.key) setHover(col.key);
+              }}
+              onDragLeave={() => setHover(null)}
+              onDrop={(e) => {
+                e.preventDefault();
+                const id = e.dataTransfer.getData("text/plain");
+                setDragging(null);
+                setHover(null);
+                if (id) onMoveCard?.(id, col.key);
+              }}
+            >
+              <KanbanHeader>
+                {col.title} • {col.cards.length}
+              </KanbanHeader>
+              <BoardTilesWrap>
+              {col.cards.map((card) => {
+                const p =
+                  typeof card.progress === "number"
+                    ? Math.max(0, Math.min(1, card.progress))
+                    : col.key === "done"
+                      ? 1
+                      : col.key === "doing"
+                        ? 0.55
+                        : 0.25;
+                return (
+                  <BoardTile
+                    key={card.id}
+                    draggable
+                    $dragging={dragging === card.id}
+                    onDragStart={(e) => {
+                      setDragging(card.id);
+                      e.dataTransfer.setData("text/plain", card.id);
+                      e.dataTransfer.effectAllowed = "move";
+                    }}
+                    onDragEnd={() => {
+                      setDragging(null);
+                      setHover(null);
+                    }}
+                  >
+                    <KanbanTileTop>
+                      <KanbanCardTitle title={card.title}>{card.title}</KanbanCardTitle>
+                      {card.avatar ? (
+                        <KanbanAvatar>
+                          <KanbanAvatarText>{card.avatar}</KanbanAvatarText>
+                        </KanbanAvatar>
+                      ) : null}
+                    </KanbanTileTop>
+                    {card.meta ? <KanbanCardMeta title={card.meta}>{card.meta}</KanbanCardMeta> : null}
+                    <KanbanTileMetaRow>
+                      <KanbanCardMeta>{col.key.toUpperCase()}</KanbanCardMeta>
+                      {card.deadline ? <KanbanCardMeta>{card.deadline}</KanbanCardMeta> : null}
+                    </KanbanTileMetaRow>
+                    <KanbanProgressTrack>
+                      <KanbanProgressFill style={{ width: `${Math.round(100 * p)}%` }} />
+                    </KanbanProgressTrack>
+                  </BoardTile>
+                );
+              })}
+              </BoardTilesWrap>
+            </BoardCol>
+          ))}
+        </BoardRow>
+      </BoardWrap>
+    );
+  };
+
+  const Gantt = ({
+    items,
+  }: {
+    items: Array<{
+      id: string;
+      title: string;
+      meta?: string;
+      status: "todo" | "doing" | "done";
+      deadline?: string;
+      progress?: number;
+      avatar?: string;
+    }>;
+  }) => {
+    const dayMs = 24 * 60 * 60 * 1000;
+    const parsed = items.map((it) => {
+      const d = it.deadline ? new Date(it.deadline) : new Date(Date.now() + 7 * dayMs);
+      const start = new Date(d.getTime() - 14 * dayMs);
+      const p =
+        typeof it.progress === "number"
+          ? Math.max(0, Math.min(1, it.progress))
+          : it.status === "done"
+            ? 1
+            : it.status === "doing"
+              ? 0.55
+              : 0.25;
+      return { ...it, start, end: d, p };
+    });
+
+    const minStart = Math.min(...parsed.map((p) => p.start.getTime()));
+    const maxEnd = Math.max(...parsed.map((p) => p.end.getTime()));
+    const range = Math.max(dayMs, maxEnd - minStart);
+
+    return (
+      <GanttWrap>
+        {parsed.map((it) => {
+          const left = (it.start.getTime() - minStart) / range;
+          const width = (it.end.getTime() - it.start.getTime()) / range;
+          return (
+            <GanttRow key={it.id}>
+              <KanbanTileTop>
+                <KanbanCardTitle title={it.title}>{it.title}</KanbanCardTitle>
+                {it.avatar ? (
+                  <KanbanAvatar>
+                    <KanbanAvatarText>{it.avatar}</KanbanAvatarText>
+                  </KanbanAvatar>
+                ) : null}
+              </KanbanTileTop>
+              <KanbanTileMetaRow>
+                <KanbanCardMeta>{it.status.toUpperCase()}</KanbanCardMeta>
+                {it.deadline ? <KanbanCardMeta>{it.deadline}</KanbanCardMeta> : null}
+              </KanbanTileMetaRow>
+              {it.meta ? <KanbanCardMeta title={it.meta}>{it.meta}</KanbanCardMeta> : null}
+              <GanttBarTrack>
+                <GanttBarWindow
+                  style={{
+                    left: `${Math.round(left * 100)}%`,
+                    width: `${Math.max(2, Math.round(width * 100))}%`,
+                  }}
+                >
+                  <GanttBarFill style={{ width: `${Math.round(it.p * 100)}%` }} />
+                </GanttBarWindow>
+              </GanttBarTrack>
+            </GanttRow>
+          );
+        })}
+      </GanttWrap>
+    );
+  };
 
   const renderWidget = (type: WidgetLayoutItem["type"]) => {
     switch (type) {
@@ -666,17 +1121,81 @@ export function WidgetGridWeb({
           />
         );
       case "TaxCountdown":
-        return <TaxCountdownWidget Text={RingSub} ValueText={RingValue} ProgressRing={TaxRing} Meter={Meter} />;
+        return <TaxCountdownWidget Text={RingSub} ValueText={RingValue} ProgressRing={TaxRing} Meter={Meter} Row={Row} Col={Col} />;
       case "ClientsAtRisk":
-        return <ClientsAtRiskWidget Text={Text} StrongText={StrongText} Row={Row} Tag={Tag} />;
+        return (
+          <ClientsAtRiskWidget
+            Text={Text}
+            StrongText={StrongText}
+            Row={Row}
+            Tag={Tag}
+            Button={({ title, onPress, variant }) => (
+              <Button variant={variant} onClick={onPress}>
+                {title}
+              </Button>
+            )}
+            Tap={Tap}
+            FullScreen={FullScreen}
+            Wrap={Wrap}
+            Section={Section}
+            StatPill={StatPill}
+          />
+        );
       case "ActiveProjects":
-        return <ActiveProjectsWidget Text={Text} StrongText={StrongText} Kanban={Kanban} />;
+        return (
+          <ActiveProjectsWidget
+            Text={Text}
+            StrongText={StrongText}
+            Kanban={Kanban}
+            KanbanBoard={KanbanBoard}
+            Gantt={Gantt}
+            Row={Row}
+            Button={({ title, onPress, variant }) => (
+              <Button variant={variant} onClick={onPress}>
+                {title}
+              </Button>
+            )}
+            Tap={Tap}
+            FullScreen={FullScreen}
+          />
+        );
       case "Mileage":
         return <MileageWidget Text={Text} />;
       case "CashFlow":
-        return <CashFlowWidget Text={Text} Chart={CashFlowChart} />;
+        return (
+          <CashFlowWidget
+            Text={Text}
+            StrongText={StrongText}
+            Chart={CashFlowChart}
+            Row={Row}
+            Button={({ title, onPress, variant }) => (
+              <Button variant={variant} onClick={onPress}>
+                {title}
+              </Button>
+            )}
+            Tap={Tap}
+            FullScreen={FullScreen}
+            StatPill={StatPill}
+          />
+        );
       case "AISuggestions":
-        return <AISuggestionsWidget Text={Text} StrongText={StrongText} CardStack={AiCardStack} />;
+        return (
+          <AISuggestionsWidget
+            Text={Text}
+            StrongText={StrongText}
+            CardStack={AiCardStack}
+            Row={Row}
+            Button={({ title, onPress, variant }) => (
+              <Button variant={variant} onClick={onPress}>
+                {title}
+              </Button>
+            )}
+            Tap={Tap}
+            FullScreen={FullScreen}
+            Wrap={Wrap}
+            Section={Section}
+          />
+        );
       case "Badges":
         return (
           <BadgesWidget
@@ -685,6 +1204,17 @@ export function WidgetGridWeb({
             ProgressRing={BadgesRing}
             BadgeShelf={Shelf}
             BadgePill={Pill}
+            Row={Row}
+            Button={({ title, onPress, variant }) => (
+              <Button variant={variant} onClick={onPress}>
+                {title}
+              </Button>
+            )}
+            Tap={Tap}
+            FullScreen={FullScreen}
+            Wrap={Wrap}
+            Section={Section}
+            Meter={Meter}
           />
         );
     }
@@ -709,89 +1239,32 @@ export function WidgetGridWeb({
       return theme.colors.category.work;
     };
 
-    const [dragX, setDragX] = useState(0);
-    const [dragging, setDragging] = useState(false);
-    const startRef = React.useRef<{ x: number } | null>(null);
-
-    const reset = () => {
-      setDragging(false);
-      setDragX(0);
-      startRef.current = null;
-    };
-
-    const commit = () => {
-      const dx = dragX;
-      const TH = 120;
-      if (Math.abs(dx) < TH) {
-        reset();
-        return;
-      }
-      const id = top?.id;
-      if (!id) {
-        reset();
-        return;
-      }
-      if (dx > 0) onDo(id);
-      else onDismiss(id);
-      reset();
+    const iconForCategory = (cat: "Finance" | "Clients" | "Workflow") => {
+      if (cat === "Finance") return "💰";
+      if (cat === "Clients") return "👥";
+      return "🛠️";
     };
 
     const Card = ({
       card,
-      offset,
-      scale,
-      rotate,
       interactive,
     }: {
       card: typeof top;
-      offset: number;
-      scale: number;
-      rotate: number;
       interactive?: boolean;
     }) => {
-      const transform = interactive
-        ? `translateX(${dragX}px) rotate(${Math.max(-8, Math.min(8, dragX / 20))}deg)`
-        : `translateY(${offset}px) scale(${scale}) rotate(${rotate}deg)`;
-
       return (
         <AiCardBase
-          style={{
-            top: offset,
-            transform,
-            opacity: interactive ? 1 : 0.92,
-            cursor: interactive ? "grab" : "default",
-            pointerEvents: interactive ? "auto" : "none",
-          }}
-          onPointerDown={(e) => {
+          style={{ cursor: interactive ? "pointer" : "default" }}
+          onClick={() => {
             if (!interactive) return;
-            (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-            startRef.current = { x: e.clientX };
-            setDragging(true);
-          }}
-          onPointerMove={(e) => {
-            if (!interactive || !dragging || !startRef.current) return;
-            setDragX(e.clientX - startRef.current.x);
-          }}
-          onPointerUp={() => {
-            if (!interactive) return;
-            commit();
-          }}
-          onPointerCancel={() => {
-            if (!interactive) return;
-            reset();
+            if (card?.id) onDo(card.id);
           }}
         >
-          <AiTag $bg={colorForCategory(card.category)}>{card.category}</AiTag>
+          <AiTag $bg={colorForCategory(card.category)}>
+            {iconForCategory(card.category)} {card.category}
+          </AiTag>
           <AiTitle>{card.title}</AiTitle>
           <AiDetail>{card.detail}</AiDetail>
-          <AiActions>
-            <Button variant="ghost" onClick={() => onDismiss(card.id)}>
-              Later
-            </Button>
-            <Button variant="primary" onClick={() => onDo(card.id)}>
-              {card.actionLabel}
-            </Button>
-          </AiActions>
         </AiCardBase>
       );
     };
@@ -800,9 +1273,9 @@ export function WidgetGridWeb({
 
     return (
       <AiStackWrap>
-        {third ? <Card card={third} offset={12} scale={0.96} rotate={-1} /> : null}
-        {second ? <Card card={second} offset={6} scale={0.98} rotate={1} /> : null}
-        <Card card={top} offset={0} scale={1} rotate={0} interactive />
+        {top ? <Card card={top} interactive /> : null}
+        {second ? <Card card={second} interactive /> : null}
+        {third ? <Card card={third} interactive /> : null}
       </AiStackWrap>
     );
   };
@@ -824,12 +1297,22 @@ export function WidgetGridWeb({
       {layout.map((w) => {
         const def = defs.get(w.type);
         const span = spanFor(w.size);
+        const isClientsAtRisk = w.type === "ClientsAtRisk";
+        const isActiveProjects = w.type === "ActiveProjects";
         return (
           <WidgetContainerWeb
             key={w.id}
             title={def?.title ?? w.type}
             category={def?.category ?? "work"}
             description={def?.description}
+            titleAfter={
+              isClientsAtRisk ? (
+                <HeaderBadge $tone={clientsAtRiskCount ? "danger" : "neutral"}>{clientsAtRiskCount}</HeaderBadge>
+              ) : isActiveProjects ? (
+                <HeaderBadge $tone={"neutral"}>{activeProjectsCount}</HeaderBadge>
+              ) : undefined
+            }
+            headerRight={isClientsAtRisk ? <Muted>{clientsAtRiskMeter}</Muted> : undefined}
             span={span}
             isDragSource={dragId === w.id}
             onDelete={() => removeWidget(w.id)}

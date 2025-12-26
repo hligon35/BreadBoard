@@ -13,4 +13,9 @@ export const Button = styled.button<{ variant?: "primary" | "ghost" | "danger" }
   color: ${({ theme, variant }) =>
     variant === "primary" || variant === "danger" ? "#fff" : theme.colors.text};
   cursor: pointer;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
 `;

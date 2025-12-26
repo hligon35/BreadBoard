@@ -76,6 +76,7 @@ export function DashboardScreen() {
   const profile = useUserStore((s) => s.profile);
   const { mode, setMode } = useThemeStore();
   const addWidget = useDashboardStore((s) => s.addWidget);
+  const layout = useDashboardStore((s) => s.preset.layout);
 
   const [widgetMode, setWidgetMode] = useState<"default" | "move" | "delete">("default");
   const [addOpen, setAddOpen] = useState(false);
@@ -87,6 +88,8 @@ export function DashboardScreen() {
     if (hour < 18) return "Good afternoon";
     return "Good evening";
   }, []);
+
+  const presentTypes = useMemo(() => new Set(layout.map((w) => w.type)), [layout]);
 
   return (
     <Screen>
@@ -171,7 +174,12 @@ export function DashboardScreen() {
                 {widgetCatalog.map((w) => (
                   <Row key={w.type} style={{ justifyContent: "space-between" }}>
                     <Muted>{w.title}</Muted>
-                    <Button title="Add" variant="primary" onPress={() => addWidget(w.type)} />
+                    <Button
+                      title="Add"
+                      variant="primary"
+                      disabled={presentTypes.has(w.type)}
+                      onPress={() => addWidget(w.type)}
+                    />
                   </Row>
                 ))}
               </>

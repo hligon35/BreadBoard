@@ -2,7 +2,7 @@ import type { KanbanBoard, WorkSummary } from "@app/context/stores/useWorkStore"
 
 export async function getMockWorkSummary(): Promise<WorkSummary> {
   return {
-    activeProjects: 4,
+    activeProjects: 6,
     openTasks: 13,
     nextDueDate: "2025-12-29",
   };
@@ -15,19 +15,23 @@ export async function getMockKanbanBoard(): Promise<KanbanBoard> {
         key: "todo",
         title: "To do",
         cards: [
-          { id: "k1", title: "Send proposal v2", meta: "Acme Co" },
-          { id: "k2", title: "Draft invoice template", meta: "Ops" },
+          { id: "k1", title: "Send proposal v2", meta: "Acme Co", progress: 0.2, deadline: "2025-12-29", avatar: "AC" },
+          { id: "k2", title: "Draft invoice template", meta: "Ops", progress: 0.35, deadline: "2026-01-03", avatar: "OP" },
+          { id: "k5", title: "Refresh brand deck", meta: "Sponsor", progress: 0.1, deadline: "2026-01-06", avatar: "SB" },
         ],
       },
       {
         key: "doing",
         title: "Doing",
-        cards: [{ id: "k3", title: "Build dashboard widgets", meta: "Bread Board" }],
+        cards: [
+          { id: "k3", title: "Build dashboard widgets", meta: "Bread Board", progress: 0.55, deadline: "2025-12-27", avatar: "BB" },
+          { id: "k6", title: "Trello sync setup", meta: "Integration", progress: 0.45, deadline: "2025-12-26", avatar: "TR" },
+        ],
       },
       {
         key: "done",
         title: "Done",
-        cards: [{ id: "k4", title: "Year-end reconciliation", meta: "Money" }],
+        cards: [{ id: "k4", title: "Year-end reconciliation", meta: "Money", progress: 1, deadline: "2025-12-22", avatar: "MO" }],
       },
     ],
   };

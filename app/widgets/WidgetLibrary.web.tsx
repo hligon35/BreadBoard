@@ -10,7 +10,9 @@ const TopSpace = styled.div`
 
 export function WidgetLibraryWeb({ onAdded }: { onAdded?: () => void }) {
   const addWidget = useDashboardStore((s) => s.addWidget);
+  const layout = useDashboardStore((s) => s.preset.layout);
   const items = useMemo(() => widgetCatalog, []);
+  const presentTypes = useMemo(() => new Set(layout.map((w) => w.type)), [layout]);
 
   return (
     <Col style={{ gap: 12 }}>
@@ -24,7 +26,9 @@ export function WidgetLibraryWeb({ onAdded }: { onAdded?: () => void }) {
             <TopSpace>
               <Button
                 variant="primary"
+                disabled={presentTypes.has(w.type)}
                 onClick={() => {
+                  if (presentTypes.has(w.type)) return;
                   addWidget(w.type);
                   onAdded?.();
                 }}

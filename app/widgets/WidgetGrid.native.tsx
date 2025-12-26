@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useRef } from "react";
-import { Modal, Pressable, ScrollView } from "react-native";
+import { Modal, PanResponder, Pressable, ScrollView, View, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Swipeable } from "react-native-gesture-handler";
 import styled from "styled-components/native";
 import { useTheme } from "styled-components/native";
 import { useDashboardStore } from "@app/context/stores/useDashboardStore";
+import { useClientsStore } from "@app/context/stores/useClientsStore";
+import { useWorkStore } from "@app/context/stores/useWorkStore";
 import { widgetCatalog } from "./widgetTypes";
 import type { WidgetLayoutItem } from "./widgetTypes";
 import { WidgetContainerNative } from "./WidgetContainer.native";
@@ -126,12 +128,39 @@ const StatPillWrap = styled.View`
   flex-grow: 1;
   flex-basis: 0px;
   min-width: 0px;
-  padding: ${({ theme }) => theme.spacing.sm}px;
+  padding: ${({ theme }) => theme.spacing.xs}px;
   border-radius: ${({ theme }) => theme.radius.md}px;
   background: ${({ theme }) => theme.colors.bg};
   border-width: 1px;
   border-color: ${({ theme }) => theme.colors.border};
   align-items: center;
+  position: relative;
+`;
+
+const StatPillHeaderRow = styled.View`
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: ${({ theme }) => theme.spacing.xs}px;
+  width: 100%;
+  overflow: hidden;
+`;
+
+const StatPillCornerBadge = styled.View`
+  position: absolute;
+  top: -10px;
+  right: -4px;
+  padding: 1px 1px;
+  border-radius: ${({ theme }) => theme.radius.sm}px;
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surface};
+`;
+
+const StatPillCornerBadgeText = styled.Text`
+  color: ${({ theme }) => theme.colors.mutedText};
+  font-size: 12px;
+  font-weight: 700;
 `;
 
 const StatPillLabel = styled.Text`
@@ -274,6 +303,13 @@ const CashFlowSeg = styled.View`
   border-radius: 999px;
 `;
 
+const CashFlowForecastSeg = styled.View`
+  position: absolute;
+  height: 2px;
+  border-radius: 999px;
+  opacity: 0.7;
+`;
+
 const KanbanRow = styled.View`
   flex-direction: row;
   gap: ${({ theme }) => theme.spacing.sm}px;
@@ -314,21 +350,139 @@ const KanbanCardMeta = styled.Text`
   font-size: 12px;
 `;
 
-const AiStackWrap = styled.View`
-  position: relative;
-  height: 150px;
+const KanbanProgressTrack = styled.View`
+  margin-top: ${({ theme }) => theme.spacing.xs}px;
+  height: 6px;
+  border-radius: 999px;
+  background: ${({ theme }) => theme.colors.border};
+  overflow: hidden;
+`;
+
+const KanbanProgressFill = styled.View`
+  height: 100%;
+  border-radius: 999px;
+  background: ${({ theme }) => theme.colors.primary};
+`;
+
+const KanbanTileTop = styled.View`
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+`;
+
+const KanbanTileMetaRow = styled.View`
+  margin-top: ${({ theme }) => theme.spacing.xs}px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+`;
+
+const KanbanAvatar = styled.View`
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  align-items: center;
+  justify-content: center;
+  background: ${({ theme }) => theme.colors.bg};
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+`;
+
+const KanbanAvatarText = styled.Text`
+  color: ${({ theme }) => theme.colors.mutedText};
+  font-size: 10px;
+  font-weight: 700;
+`;
+
+const BoardWrap = styled.View`
   margin-top: ${({ theme }) => theme.spacing.sm}px;
+  margin-left: ${({ theme }) => -theme.spacing.lg}px;
+  margin-right: ${({ theme }) => -theme.spacing.lg}px;
+`;
+
+const BoardStack = styled.View`
+  gap: ${({ theme }) => theme.spacing.sm}px;
+`;
+
+const BoardColBase = styled.View<{ $active?: boolean }>`
+  border-radius: ${({ theme }) => theme.radius.md}px;
+  background: ${({ theme, $active }) => ($active ? theme.colors.surface : theme.colors.bg)};
+  border-width: 1px;
+  border-color: ${({ theme, $active }) => ($active ? theme.colors.primary : theme.colors.border)};
+  padding: ${({ theme }) => theme.spacing.sm}px;
+  gap: ${({ theme }) => theme.spacing.xs}px;
+`;
+
+const BoardColWithRef: any = BoardColBase;
+
+const BoardCol = React.forwardRef<View, React.ComponentProps<typeof BoardColBase>>(
+  ({ children, ...rest }, ref) => (
+    <BoardColWithRef ref={ref} {...rest}>
+      {children}
+    </BoardColWithRef>
+  )
+);
+BoardCol.displayName = "BoardCol";
+
+const BoardTile = styled.View<{ $dragging?: boolean }>`
+  border-radius: ${({ theme }) => theme.radius.sm}px;
+  background: ${({ theme }) => theme.colors.surface};
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  padding: ${({ theme }) => theme.spacing.xs}px;
+  opacity: ${({ $dragging }) => ($dragging ? 0.55 : 1)};
+`;
+
+const GanttWrap = styled.View`
+  margin-top: ${({ theme }) => theme.spacing.sm}px;
+  gap: ${({ theme }) => theme.spacing.xs}px;
+  margin-left: ${({ theme }) => -theme.spacing.lg}px;
+  margin-right: ${({ theme }) => -theme.spacing.lg}px;
+`;
+
+const GanttRow = styled.View`
+  border-radius: ${({ theme }) => theme.radius.md}px;
+  background: ${({ theme }) => theme.colors.bg};
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  padding: ${({ theme }) => theme.spacing.sm}px;
+  gap: ${({ theme }) => theme.spacing.xs}px;
+`;
+
+const GanttBarTrack = styled.View`
+  height: 10px;
+  border-radius: 999px;
+  background: ${({ theme }) => theme.colors.border};
+  overflow: hidden;
+`;
+
+const GanttBarWindow = styled.View`
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+  background: ${({ theme }) => theme.colors.bg};
+`;
+
+const GanttBarFill = styled.View`
+  height: 100%;
+  border-radius: 999px;
+  background: ${({ theme }) => theme.colors.primary};
+`;
+
+const AiStackWrap = styled.View`
+  margin-top: ${({ theme }) => theme.spacing.sm}px;
+  margin-left: ${({ theme }) => -theme.spacing.lg}px;
+  margin-right: ${({ theme }) => -theme.spacing.lg}px;
 `;
 
 const AiCardBase = styled.View`
-  position: absolute;
-  left: 0;
-  right: 0;
   border-radius: ${({ theme }) => theme.radius.md}px;
   background: ${({ theme }) => theme.colors.surface};
   border-width: 1px;
   border-color: ${({ theme }) => theme.colors.border};
   padding: ${({ theme }) => theme.spacing.sm}px;
+  min-width: 0px;
 `;
 
 const AiTag = styled.Text<{ $bg: string }>`
@@ -435,8 +589,35 @@ export function WidgetGridNative({
   const setLayout = useDashboardStore((s) => s.setLayout);
   const removeWidget = useDashboardStore((s) => s.removeWidget);
 
+  const clients = useClientsStore((s) => s.clients);
+  const workSummary = useWorkStore((s) => s.summary);
+
   const defs = useMemo(() => new Map(widgetCatalog.map((w) => [w.type, w])), []);
   const theme = useTheme();
+
+  const clientsAtRiskCount = useMemo(() => {
+    const riskFor = (status: string, riskLevel?: string) => {
+      if (riskLevel) return riskLevel;
+      if (status === "at_risk") return "high";
+      if (status === "inactive") return "medium";
+      return "low";
+    };
+    return clients.filter((c) => riskFor(c.status, (c as any).riskLevel) === "high").length;
+  }, [clients]);
+
+  const clientsAtRiskMeter = "🟥 🟨 🟩";
+
+  const activeProjectsCount = workSummary?.activeProjects ?? 0;
+
+  const HeaderBadge = styled.Text<{ $tone: "danger" | "neutral" }>`
+    padding: 4px 8px;
+    border-radius: ${({ theme }) => theme.radius.sm}px;
+    overflow: hidden;
+    color: ${({ theme, $tone }) => ($tone === "danger" ? "#fff" : theme.colors.text)};
+    background: ${({ theme, $tone }) => ($tone === "danger" ? theme.colors.danger : theme.colors.border)};
+    font-size: 12px;
+    font-weight: 700;
+  `;
 
   const Text = ({ children }: { children: React.ReactNode }) => <Muted>{children}</Muted>;
 
@@ -466,13 +647,21 @@ export function WidgetGridNative({
     </ProgressRingNative>
   );
 
-  const Row = ({ children }: { children: React.ReactNode }) => <InlineRow>{children}</InlineRow>;
+  const Row = ({ children, style }: { children: React.ReactNode; style?: any }) => (
+    <InlineRow style={style}>{children}</InlineRow>
+  );
+
+  const Col = ({ children, style }: { children: React.ReactNode; style?: any }) => (
+    <View style={[{ flexDirection: "column", alignItems: "flex-start" }, style]}>{children}</View>
+  );
   const Tag = ({ tone, children }: { tone: "danger" | "warning" | "success"; children: React.ReactNode }) => (
     <ToneTag $tone={tone}>{children}</ToneTag>
   );
 
   const Tap = ({ onPress, children }: { onPress: () => void; children: React.ReactNode }) => (
-    <Pressable onPress={onPress}>{children}</Pressable>
+    <Pressable onPress={onPress} style={{ width: "100%", alignSelf: "stretch" }}>
+      {children}
+    </Pressable>
   );
 
   const FullScreen = ({
@@ -517,15 +706,33 @@ export function WidgetGridNative({
     value,
     tone,
     hint,
+    inline,
+    badge,
   }: {
     label: string;
     value: string;
     tone?: "neutral" | "success" | "danger";
     hint?: string;
+    inline?: boolean;
+    badge?: string;
   }) => (
     <StatPillWrap>
-      <StatPillLabel>{label}</StatPillLabel>
-      <StatPillValue $tone={tone}>{value}</StatPillValue>
+      {badge ? (
+        <StatPillCornerBadge>
+          <StatPillCornerBadgeText>{badge}</StatPillCornerBadgeText>
+        </StatPillCornerBadge>
+      ) : null}
+      {inline ? (
+        <StatPillHeaderRow>
+          <StatPillLabel>{label}</StatPillLabel>
+          <StatPillValue $tone={tone}>{value}</StatPillValue>
+        </StatPillHeaderRow>
+      ) : (
+        <>
+          <StatPillLabel>{label}</StatPillLabel>
+          <StatPillValue $tone={tone}>{value}</StatPillValue>
+        </>
+      )}
       {hint ? <StatPillHint>{hint}</StatPillHint> : null}
     </StatPillWrap>
   );
@@ -623,7 +830,7 @@ export function WidgetGridNative({
       key: "todo" | "doing" | "done";
       title: string;
       count: number;
-      cards: Array<{ id: string; title: string; meta?: string }>;
+      cards: Array<{ id: string; title: string; meta?: string; progress?: number; deadline?: string; avatar?: string }>;
     }>;
   }) => (
     <KanbanRow>
@@ -632,17 +839,213 @@ export function WidgetGridNative({
           <KanbanHeader>
             {col.title} • {col.count}
           </KanbanHeader>
-          {col.cards.slice(0, 3).map((card) => (
+          {col.cards.slice(0, 2).map((card) => (
             <KanbanCard key={card.id}>
-              <KanbanCardTitle>{card.title}</KanbanCardTitle>
-              {card.meta ? <KanbanCardMeta>{card.meta}</KanbanCardMeta> : null}
+              <KanbanCardTitle numberOfLines={1}>{card.title}</KanbanCardTitle>
+              {card.meta ? <KanbanCardMeta numberOfLines={1}>{card.meta}</KanbanCardMeta> : null}
+              <KanbanProgressTrack>
+                <KanbanProgressFill
+                  style={{
+                    width: `${Math.round(
+                      100 *
+                        (typeof card.progress === "number"
+                          ? Math.max(0, Math.min(1, card.progress))
+                          : col.key === "done"
+                            ? 1
+                            : col.key === "doing"
+                              ? 0.55
+                              : 0.25)
+                    )}%`,
+                  }}
+                />
+              </KanbanProgressTrack>
             </KanbanCard>
           ))}
-          {col.count > 3 ? <KanbanCardMeta>+{col.count - 3} more</KanbanCardMeta> : null}
+          {col.count > 2 ? <KanbanCardMeta numberOfLines={1}>+{col.count - 2} more</KanbanCardMeta> : null}
         </KanbanCol>
       ))}
     </KanbanRow>
   );
+
+  const KanbanBoard = ({
+    columns,
+    onMoveCard,
+  }: {
+    columns: Array<{
+      key: "todo" | "doing" | "done";
+      title: string;
+      cards: Array<{ id: string; title: string; meta?: string; progress?: number; deadline?: string; avatar?: string }>;
+    }>;
+    onMoveCard?: (cardId: string, toColumnKey: "todo" | "doing" | "done") => void;
+  }) => {
+    const layouts = useRef<Record<string, { y: number; h: number }>>({});
+    const colRefs = useRef<Record<string, any>>({});
+    const [hover, setHover] = React.useState<"todo" | "doing" | "done" | null>(null);
+    const [dragging, setDragging] = React.useState<string | null>(null);
+
+    const measure = (key: "todo" | "doing" | "done") => {
+      const ref = colRefs.current[key];
+      if (!ref?.measureInWindow) return;
+      ref.measureInWindow((_x: number, y: number, _w: number, h: number) => {
+        layouts.current[key] = { y, h };
+      });
+    };
+
+    const keyForPageY = (pageY: number) => {
+      const keys: Array<"todo" | "doing" | "done"> = ["todo", "doing", "done"];
+      for (const k of keys) {
+        const box = layouts.current[k];
+        if (!box) continue;
+        if (pageY >= box.y && pageY <= box.y + box.h) return k;
+      }
+      return null;
+    };
+
+    const Tile = ({
+      card,
+      from,
+    }: {
+      card: { id: string; title: string; meta?: string; progress?: number; deadline?: string; avatar?: string };
+      from: "todo" | "doing" | "done";
+    }) => {
+      const responder = useMemo(
+        () =>
+          PanResponder.create({
+            onStartShouldSetPanResponder: () => true,
+            onPanResponderGrant: () => {
+              setDragging(card.id);
+              setHover(from);
+            },
+            onPanResponderMove: (evt) => {
+              const pageY = (evt.nativeEvent as any).pageY as number | undefined;
+              if (typeof pageY !== "number") return;
+              const k = keyForPageY(pageY);
+              if (k && k !== hover) setHover(k);
+            },
+            onPanResponderRelease: () => {
+              const to = hover ?? from;
+              setDragging(null);
+              setHover(null);
+              if (to !== from) onMoveCard?.(card.id, to);
+            },
+            onPanResponderTerminate: () => {
+              setDragging(null);
+              setHover(null);
+            },
+          }),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [card.id, from, hover, onMoveCard]
+      );
+
+      const p = typeof card.progress === "number" ? Math.max(0, Math.min(1, card.progress)) : from === "done" ? 1 : from === "doing" ? 0.55 : 0.25;
+
+      return (
+        <BoardTile
+          {...responder.panHandlers}
+          $dragging={dragging === card.id}
+        >
+          <KanbanTileTop>
+            <KanbanCardTitle>{card.title}</KanbanCardTitle>
+            {card.avatar ? (
+              <KanbanAvatar>
+                <KanbanAvatarText>{card.avatar}</KanbanAvatarText>
+              </KanbanAvatar>
+            ) : null}
+          </KanbanTileTop>
+          {card.meta ? <KanbanCardMeta>{card.meta}</KanbanCardMeta> : null}
+          <KanbanTileMetaRow>
+            <KanbanCardMeta>{from.toUpperCase()}</KanbanCardMeta>
+            {card.deadline ? <KanbanCardMeta>{card.deadline}</KanbanCardMeta> : null}
+          </KanbanTileMetaRow>
+          <KanbanProgressTrack>
+            <KanbanProgressFill style={{ width: `${Math.round(100 * p)}%` }} />
+          </KanbanProgressTrack>
+        </BoardTile>
+      );
+    };
+
+    return (
+      <BoardWrap>
+        <BoardStack>
+          {columns.map((col) => (
+            <BoardCol
+              key={col.key}
+              $active={hover === col.key}
+              ref={(r: any) => {
+                colRefs.current[col.key] = r;
+              }}
+              onLayout={() => measure(col.key)}
+            >
+              <KanbanHeader>
+                {col.title} • {col.cards.length}
+              </KanbanHeader>
+              {col.cards.map((card) => (
+                <Tile key={card.id} card={card} from={col.key} />
+              ))}
+            </BoardCol>
+          ))}
+        </BoardStack>
+      </BoardWrap>
+    );
+  };
+
+  const Gantt = ({
+    items,
+  }: {
+    items: Array<{
+      id: string;
+      title: string;
+      meta?: string;
+      status: "todo" | "doing" | "done";
+      deadline?: string;
+      progress?: number;
+      avatar?: string;
+    }>;
+  }) => {
+    const dayMs = 24 * 60 * 60 * 1000;
+    const parsed = items.map((it) => {
+      const d = it.deadline ? new Date(it.deadline) : new Date(Date.now() + 7 * dayMs);
+      const start = new Date(d.getTime() - 14 * dayMs);
+      const p = typeof it.progress === "number" ? Math.max(0, Math.min(1, it.progress)) : it.status === "done" ? 1 : it.status === "doing" ? 0.55 : 0.25;
+      return { ...it, start, end: d, p };
+    });
+
+    const minStart = Math.min(...parsed.map((p) => p.start.getTime()));
+    const maxEnd = Math.max(...parsed.map((p) => p.end.getTime()));
+    const range = Math.max(dayMs, maxEnd - minStart);
+
+    return (
+      <GanttWrap>
+        {parsed.map((it) => {
+          const left = (it.start.getTime() - minStart) / range;
+          const width = (it.end.getTime() - it.start.getTime()) / range;
+
+          return (
+            <GanttRow key={it.id}>
+              <KanbanTileTop>
+                <KanbanCardTitle>{it.title}</KanbanCardTitle>
+                {it.avatar ? (
+                  <KanbanAvatar>
+                    <KanbanAvatarText>{it.avatar}</KanbanAvatarText>
+                  </KanbanAvatar>
+                ) : null}
+              </KanbanTileTop>
+              <KanbanTileMetaRow>
+                <KanbanCardMeta>{it.status.toUpperCase()}</KanbanCardMeta>
+                {it.deadline ? <KanbanCardMeta>{it.deadline}</KanbanCardMeta> : null}
+              </KanbanTileMetaRow>
+              {it.meta ? <KanbanCardMeta>{it.meta}</KanbanCardMeta> : null}
+              <GanttBarTrack>
+                <GanttBarWindow style={{ left: `${Math.round(left * 100)}%`, width: `${Math.max(2, Math.round(width * 100))}%` }}>
+                  <GanttBarFill style={{ width: `${Math.round(it.p * 100)}%` }} />
+                </GanttBarWindow>
+              </GanttBarTrack>
+            </GanttRow>
+          );
+        })}
+      </GanttWrap>
+    );
+  };
 
   const AiCardStack = ({
     cards,
@@ -653,6 +1056,7 @@ export function WidgetGridNative({
     onDo: (id: string) => void;
     onDismiss: (id: string) => void;
   }) => {
+    const { width: windowWidth } = useWindowDimensions();
     const top = cards[0];
     const second = cards[1];
     const third = cards[2];
@@ -663,73 +1067,84 @@ export function WidgetGridNative({
       return theme.colors.category.work;
     };
 
-    const Card = ({
-      card,
-      offset,
-      scale,
-      rotate,
-      interactive,
-    }: {
-      card: typeof top;
-      offset: number;
-      scale: number;
-      rotate: number;
-      interactive?: boolean;
-    }) => (
-      <AiCardBase
-        style={{
-          top: offset,
-          transform: [{ scale }, { rotate: `${rotate}deg` }],
-          opacity: interactive ? 1 : 0.92,
-        }}
+    const iconForCategory = (cat: "Finance" | "Clients" | "Workflow") => {
+      if (cat === "Finance") return "💰";
+      if (cat === "Clients") return "👥";
+      return "🛠️";
+    };
+
+    const cardW = Math.max(
+      160,
+      Math.floor((windowWidth - theme.spacing.lg * 2 - theme.spacing.sm) / 2)
+    );
+
+    const Card = ({ card }: { card: typeof top }) => (
+      <Pressable
+        onPress={() => onDo(card.id)}
+        style={{ width: cardW }}
       >
-        <AiTag $bg={colorForCategory(card.category)}>{card.category}</AiTag>
-        <AiTitle>{card.title}</AiTitle>
-        <AiDetail>{card.detail}</AiDetail>
-        <AiActions>
-          <Button title="Later" variant="ghost" onPress={() => onDismiss(card.id)} />
-          <Button title={card.actionLabel} variant="primary" onPress={() => onDo(card.id)} />
-        </AiActions>
-      </AiCardBase>
+        <AiCardBase>
+          <AiTag $bg={colorForCategory(card.category)}>
+            {iconForCategory(card.category)} {card.category}
+          </AiTag>
+          <AiTitle numberOfLines={1}>{card.title}</AiTitle>
+          <AiDetail numberOfLines={2}>{card.detail}</AiDetail>
+        </AiCardBase>
+      </Pressable>
     );
 
     if (!top) return null;
 
+    const visible = [top, second, third].filter(Boolean) as Array<typeof top>;
+
     return (
       <AiStackWrap>
-        {third ? <Card card={third} offset={12} scale={0.96} rotate={-1} /> : null}
-        {second ? <Card card={second} offset={6} scale={0.98} rotate={1} /> : null}
-        <Swipeable
-          renderLeftActions={() => null}
-          renderRightActions={() => null}
-          onSwipeableOpen={(direction) => {
-            if (direction === "right") onDo(top.id);
-            else onDismiss(top.id);
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingHorizontal: theme.spacing.lg,
+            gap: theme.spacing.sm,
           }}
         >
-          <Card card={top} offset={0} scale={1} rotate={0} interactive />
-        </Swipeable>
+          {visible.map((c) => (
+            <Card key={c.id} card={c} />
+          ))}
+        </ScrollView>
       </AiStackWrap>
     );
   };
 
   const CashFlowChart = ({
     points,
+    compact,
+    showZones,
+    forecastNet,
   }: {
     points: Array<{ label: string; inflow: number; outflow: number }>;
+    compact?: boolean;
+    showZones?: boolean;
+    forecastNet?: Array<{ label: string; value: number }>;
   }) => {
     const [w, setW] = React.useState(0);
-    const H = 96;
+    const H = compact ? 64 : 140;
     const P = 8;
 
     const maxV = Math.max(1, ...points.flatMap((p) => [p.inflow, p.outflow]));
 
+    const forecastCount = forecastNet?.length ?? 0;
+    const reserve = forecastCount ? Math.min(48, Math.max(0, (w - P * 2) * 0.25)) : 0;
+    const plotW = Math.max(0, (w - P * 2) - reserve);
+
     const xFor = (i: number) => {
       if (points.length <= 1) return P;
       const t = i / (points.length - 1);
-      return P + t * Math.max(0, w - P * 2);
+      return P + t * plotW;
     };
     const yFor = (v: number) => P + (1 - v / maxV) * (H - P * 2);
+
+    const netMax = Math.max(1, ...points.map((p) => Math.abs(p.inflow - p.outflow)));
+    const yForNet = (v: number) => P + (1 - (v + netMax) / (netMax * 2)) * (H - P * 2);
 
     const segs = (key: "inflow" | "outflow") => {
       const color = key === "inflow" ? theme.colors.success : theme.colors.danger;
@@ -775,18 +1190,93 @@ export function WidgetGridNative({
       return result;
     };
 
+    const forecastSegs = () => {
+      if (!forecastNet?.length || !reserve) return null;
+
+      const net = points.map((p) => p.inflow - p.outflow);
+      const lastIndex = points.length - 1;
+      const lastX = xFor(lastIndex);
+      const lastY = yForNet(net[lastIndex]);
+
+      const stepX = reserve / forecastNet.length;
+      const color = theme.colors.mutedText;
+      const nodes: React.ReactNode[] = [];
+
+      let prevX = lastX;
+      let prevY = lastY;
+      for (let j = 0; j < forecastNet.length; j++) {
+        const nextX = lastX + stepX * (j + 1);
+        const nextY = yForNet(forecastNet[j].value);
+
+        const dx = nextX - prevX;
+        const dy = nextY - prevY;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
+
+        const dash = 10;
+        const gap = 6;
+        const step = dash + gap;
+        const count = Math.max(1, Math.floor(len / step));
+
+        for (let d = 0; d < count; d++) {
+          const left = prevX + (dx / len) * (d * step);
+          const top = prevY + (dy / len) * (d * step);
+          nodes.push(
+            <CashFlowForecastSeg
+              key={`forecast_${j}_${d}`}
+              style={{
+                left,
+                top,
+                width: Math.min(dash, len - d * step),
+                backgroundColor: color,
+                transform: [{ rotate: `${angle}deg` }],
+                transformOrigin: "0px 0px" as any,
+              }}
+            />
+          );
+        }
+
+        prevX = nextX;
+        prevY = nextY;
+      }
+
+      return <CashFlowOverlay>{nodes}</CashFlowOverlay>;
+    };
+
     return (
-      <CashFlowWrap onLayout={(e) => setW(e.nativeEvent.layout.width)}>
+      <CashFlowWrap style={{ height: H }} onLayout={(e) => setW(e.nativeEvent.layout.width)}>
         {w > 0 ? (
           <>
+            {/* Zones (net positive/negative) */}
+            {showZones
+              ? points.map((p, i) => {
+                  const sliceW =
+                    points.length > 1 ? Math.max(2, plotW / (points.length - 1)) : Math.max(2, plotW);
+                  const x = xFor(i) - sliceW / 2;
+                  const isPos = p.inflow - p.outflow >= 0;
+                  return (
+                    <CashFlowBand
+                      key={`zone_${i}`}
+                      style={{
+                        left: x,
+                        width: sliceW,
+                        height: H,
+                        backgroundColor: isPos ? theme.colors.success : theme.colors.danger,
+                        opacity: 0.06,
+                      }}
+                    />
+                  );
+                })
+              : null}
+
             {/* Bands: filled to baseline (overlapping) */}
             {points.map((p, i) => {
-              const sliceW = points.length > 1 ? Math.max(2, (w - P * 2) / (points.length - 1)) : Math.max(2, w - P * 2);
+              const sliceW = points.length > 1 ? Math.max(2, plotW / (points.length - 1)) : Math.max(2, plotW);
               const x = xFor(i) - sliceW / 2;
               const inflowH = Math.max(0, H - P - yFor(p.inflow));
               const outflowH = Math.max(0, H - P - yFor(p.outflow));
               return (
-                <React.Fragment key={`band_${i}`}> 
+                <React.Fragment key={`band_${i}`}>
                   <CashFlowBand
                     style={{
                       left: x,
@@ -812,6 +1302,7 @@ export function WidgetGridNative({
             {/* Lines on top */}
             <CashFlowOverlay>{segs("inflow")}</CashFlowOverlay>
             <CashFlowOverlay>{segs("outflow")}</CashFlowOverlay>
+            {forecastSegs()}
           </>
         ) : null}
       </CashFlowWrap>
@@ -836,17 +1327,65 @@ export function WidgetGridNative({
           />
         );
       case "TaxCountdown":
-        return <TaxCountdownWidget Text={RingSub} ValueText={RingValue} ProgressRing={TaxRing} Meter={Meter} />;
+        return <TaxCountdownWidget Text={RingSub} ValueText={RingValue} ProgressRing={TaxRing} Meter={Meter} Row={Row} Col={Col} />;
       case "ClientsAtRisk":
-        return <ClientsAtRiskWidget Text={Text} StrongText={StrongText} Row={Row} Tag={Tag} />;
+        return (
+          <ClientsAtRiskWidget
+            Text={Text}
+            StrongText={StrongText}
+            Row={Row}
+            Tag={Tag}
+            Button={Button}
+            Tap={Tap}
+            FullScreen={FullScreen}
+            Wrap={Wrap}
+            Section={Section}
+            StatPill={StatPill}
+          />
+        );
       case "ActiveProjects":
-        return <ActiveProjectsWidget Text={Text} StrongText={StrongText} Kanban={Kanban} />;
+        return (
+          <ActiveProjectsWidget
+            Text={Text}
+            StrongText={StrongText}
+            Kanban={Kanban}
+            KanbanBoard={KanbanBoard}
+            Gantt={Gantt}
+            Row={Row}
+            Button={Button}
+            Tap={Tap}
+            FullScreen={FullScreen}
+          />
+        );
       case "Mileage":
         return <MileageWidget Text={Text} />;
       case "CashFlow":
-        return <CashFlowWidget Text={Text} Chart={CashFlowChart} />;
+        return (
+          <CashFlowWidget
+            Text={Text}
+            StrongText={StrongText}
+            Chart={CashFlowChart}
+            Button={Button}
+            Row={Row}
+            Tap={Tap}
+            FullScreen={FullScreen}
+            StatPill={StatPill}
+          />
+        );
       case "AISuggestions":
-        return <AISuggestionsWidget Text={Text} StrongText={StrongText} CardStack={AiCardStack} />;
+        return (
+          <AISuggestionsWidget
+            Text={Text}
+            StrongText={StrongText}
+            CardStack={AiCardStack}
+            Row={Row}
+            Button={({ title, onPress, variant }) => <Button title={title} onPress={onPress} variant={variant} />}
+            Tap={Tap}
+            FullScreen={FullScreen}
+            Wrap={Wrap}
+            Section={Section}
+          />
+        );
       case "Badges":
         return (
           <BadgesWidget
@@ -855,6 +1394,13 @@ export function WidgetGridNative({
             ProgressRing={BadgesRing}
             BadgeShelf={BadgeShelf}
             BadgePill={BadgePill}
+            Row={Row}
+            Button={({ title, onPress, variant }) => <Button title={title} onPress={onPress} variant={variant} />}
+            Tap={Tap}
+            FullScreen={FullScreen}
+            Wrap={Wrap}
+            Section={Section}
+            Meter={Meter}
           />
         );
     }
@@ -901,12 +1447,22 @@ export function WidgetGridNative({
     <>
       {layout.map((w) => {
         const def = defs.get(w.type);
+        const isClientsAtRisk = w.type === "ClientsAtRisk";
+        const isActiveProjects = w.type === "ActiveProjects";
         const content = (
           <WidgetContainerNative
             key={w.id}
             title={def?.title ?? w.type}
             category={def?.category ?? "work"}
             description={def?.description}
+            titleAfter={
+              isClientsAtRisk ? (
+                <HeaderBadge $tone={clientsAtRiskCount ? "danger" : "neutral"}>{clientsAtRiskCount}</HeaderBadge>
+              ) : isActiveProjects ? (
+                <HeaderBadge $tone={activeProjectsCount ? "neutral" : "neutral"}>{activeProjectsCount}</HeaderBadge>
+              ) : undefined
+            }
+            headerRight={isClientsAtRisk ? <Muted>{clientsAtRiskMeter}</Muted> : undefined}
           >
             {renderWidget(w.type)}
             {mode === "move" ? (

@@ -9,7 +9,24 @@ const TabWrap = styled.div`
   flex-wrap: wrap;
 `;
 
-export type TabItem = { key: string; label: string };
+const TabLabel = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.xs}px;
+`;
+
+const Badge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.text};
+  font-size: ${({ theme }) => theme.typography.base - 2}px;
+`;
+
+export type TabItem = { key: string; label: string; badge?: number | string | null };
 
 export function Tabs({
   items,
@@ -29,7 +46,10 @@ export function Tabs({
             variant={it.key === activeKey ? "primary" : "ghost"}
             onClick={() => onChange(it.key)}
           >
-            {it.label}
+            <TabLabel>
+              <span>{it.label}</span>
+              {it.badge !== undefined && it.badge !== null && <Badge>{it.badge}</Badge>}
+            </TabLabel>
           </Button>
         ))}
       </TabWrap>

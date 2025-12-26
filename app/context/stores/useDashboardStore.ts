@@ -17,13 +17,17 @@ export const useDashboardStore = create<DashboardState>((set) => ({
   removeWidget: (id) =>
     set((s) => ({ preset: { ...s.preset, layout: s.preset.layout.filter((w) => w.id !== id) } })),
   addWidget: (type) =>
-    set((s) => ({
-      preset: {
-        ...s.preset,
-        layout: [
-          ...s.preset.layout,
-          { id: `${type}_${Date.now()}`, type, size: "M" as const },
-        ],
-      },
-    })),
+    set((s) => {
+      if (s.preset.layout.some((w) => w.type === type)) return {};
+
+      return {
+        preset: {
+          ...s.preset,
+          layout: [
+            ...s.preset.layout,
+            { id: `${type}_${Date.now()}`, type, size: "M" as const },
+          ],
+        },
+      };
+    }),
 }));

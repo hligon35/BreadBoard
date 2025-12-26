@@ -6,7 +6,9 @@ import { useDashboardStore } from "@app/context/stores/useDashboardStore";
 
 export function WidgetLibraryNative() {
   const addWidget = useDashboardStore((s) => s.addWidget);
+  const layout = useDashboardStore((s) => s.preset.layout);
   const items = useMemo(() => widgetCatalog, []);
+  const presentTypes = useMemo(() => new Set(layout.map((w) => w.type)), [layout]);
 
   return (
     <Screen>
@@ -17,7 +19,12 @@ export function WidgetLibraryNative() {
             <Card key={w.type}>
               <Muted>{w.title}</Muted>
               <Muted>{w.description}</Muted>
-              <Button title="Add" variant="primary" onPress={() => addWidget(w.type)} />
+              <Button
+                title="Add"
+                variant="primary"
+                disabled={presentTypes.has(w.type)}
+                onPress={() => addWidget(w.type)}
+              />
             </Card>
           ))}
         </Container>

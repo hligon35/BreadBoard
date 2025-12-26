@@ -21,18 +21,26 @@ export function WidgetContainerNative({
   title,
   category,
   description,
+  titleAfter,
+  headerRight,
   children,
 }: {
   title: string;
   category: CategoryKey;
   description?: string;
+  titleAfter?: React.ReactNode;
+  headerRight?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <Card>
       <AccentBar $category={category} />
       <Row style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
-        <Title>{title}</Title>
+        <Row style={{ alignItems: "center" }}>
+          <Title>{title}</Title>
+          {titleAfter}
+        </Row>
+        {headerRight}
       </Row>
       {description ? <Muted>{description}</Muted> : null}
       <Row style={{ marginTop: 10, alignItems: "flex-start" }}>{children}</Row>

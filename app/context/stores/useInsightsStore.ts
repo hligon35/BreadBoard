@@ -4,8 +4,11 @@ import { getMockInsightsOverview } from "@app/mock/services/analyticsService";
 export type AISuggestion = {
   id: string;
   category: "Finance" | "Clients" | "Workflow";
+  urgency: "Low" | "Medium" | "High";
+  impact: "Low" | "Medium" | "High";
   title: string;
   detail: string;
+  why: string;
   actionLabel: string;
 };
 
@@ -17,6 +20,10 @@ export type InsightsOverview = {
   nextBadgeLabel: string;
   nextBadgeProgress: number; // 0..1
   earnedBadges: string[];
+  streakDays: number;
+  xpPoints: number;
+  xpNextLevelPoints: number;
+  upcomingAchievements: string[];
   aiSuggestions: AISuggestion[];
 };
 

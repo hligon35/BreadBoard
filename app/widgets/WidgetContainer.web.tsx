@@ -66,6 +66,8 @@ export function WidgetContainerWeb({
   title,
   category,
   description,
+  titleAfter,
+  headerRight,
   span,
   isDragSource,
   onDelete,
@@ -76,6 +78,8 @@ export function WidgetContainerWeb({
   title: string;
   category: CategoryKey;
   description?: string;
+  titleAfter?: React.ReactNode;
+  headerRight?: React.ReactNode;
   span: number;
   isDragSource?: boolean;
   onDelete: () => void;
@@ -90,10 +94,14 @@ export function WidgetContainerWeb({
       <AccentBar $category={category} />
       <Row style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
-          <Title>{title}</Title>
+          <Row style={{ alignItems: "center" }}>
+            <Title>{title}</Title>
+            {titleAfter}
+          </Row>
           {description ? <Muted>{description}</Muted> : null}
         </div>
         <Row>
+          {headerRight}
           <MenuWrap>
             <IconButton aria-label="Card actions" onClick={() => setOpen((v) => !v)}>
               ⋯
