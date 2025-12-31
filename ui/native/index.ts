@@ -4,3 +4,4 @@ export * from "./Chip";
 export * from "./Tabs";
 export * from "./TopStack";
 export * from "./Placeholders";
+export * from "./charts/charts";

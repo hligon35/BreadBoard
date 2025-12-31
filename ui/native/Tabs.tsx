@@ -1,7 +1,14 @@
 import React from "react";
 import styled from "styled-components/native";
 
-import { Row } from "./primitives";
+const TabsScroll = styled.ScrollView``;
+
+const TabRow = styled.View`
+  flex-direction: row;
+  gap: ${({ theme }) => theme.spacing.sm}px;
+  align-items: center;
+  flex-wrap: nowrap;
+`;
 
 export type TabItem = { key: string; label: string; badge?: number | string | null };
 
@@ -43,19 +50,21 @@ export function Tabs({
   onChange: (key: string) => void;
 }) {
   return (
-    <Row>
-      {items.map((it) => (
-        <TabBtn key={it.key} $active={it.key === activeKey} onPress={() => onChange(it.key)}>
-          <TabInner>
-            <TabLabel $active={it.key === activeKey}>{it.label}</TabLabel>
-            {it.badge !== undefined && it.badge !== null && (
-              <Badge>
-                <BadgeText>{it.badge}</BadgeText>
-              </Badge>
-            )}
-          </TabInner>
-        </TabBtn>
-      ))}
-    </Row>
+    <TabsScroll horizontal showsHorizontalScrollIndicator={false}>
+      <TabRow>
+        {items.map((it) => (
+          <TabBtn key={it.key} $active={it.key === activeKey} onPress={() => onChange(it.key)}>
+            <TabInner>
+              <TabLabel $active={it.key === activeKey}>{it.label}</TabLabel>
+              {it.badge !== undefined && it.badge !== null && (
+                <Badge>
+                  <BadgeText>{it.badge}</BadgeText>
+                </Badge>
+              )}
+            </TabInner>
+          </TabBtn>
+        ))}
+      </TabRow>
+    </TabsScroll>
   );
 }

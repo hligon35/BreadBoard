@@ -1,85 +1,42 @@
 import type { Client } from "@app/context/stores/useClientsStore";
+import { mockDb } from "@app/mock/data/mockDb";
 
 export async function getMockClients(): Promise<Client[]> {
-  return [
-    {
-      id: "cli_1",
-      name: "Acme Co",
-      status: "active",
-      lastInvoiceAmount: 4200,
-      riskLevel: "low",
-      riskReason: "Healthy engagement",
-    },
-    {
-      id: "cli_2",
-      name: "Northwind",
-      status: "at_risk",
-      lastInvoiceAmount: 1800,
-      riskLevel: "high",
-      riskReason: "Late invoice",
-    },
-    {
-      id: "cli_3",
-      name: "Globex",
-      status: "inactive",
-      lastInvoiceAmount: 0,
-      riskLevel: "medium",
-      riskReason: "Low engagement",
-    },
-    {
-      id: "cli_4",
-      name: "Initech",
-      status: "at_risk",
-      lastInvoiceAmount: 2600,
-      riskLevel: "high",
-      riskReason: "Payment dispute",
-    },
-    {
-      id: "cli_5",
-      name: "Umbrella",
-      status: "inactive",
-      lastInvoiceAmount: 900,
-      riskLevel: "medium",
-      riskReason: "No recent activity",
-    },
-    {
-      id: "cli_6",
-      name: "Soylent",
-      status: "at_risk",
-      lastInvoiceAmount: 1200,
-      riskLevel: "high",
-      riskReason: "Overdue renewal",
-    },
-    {
-      id: "cli_7",
-      name: "Hooli",
-      status: "active",
-      lastInvoiceAmount: 5200,
-      riskLevel: "low",
-      riskReason: "On-time payments",
-    },
-    {
-      id: "cli_8",
-      name: "Stark Industries",
-      status: "inactive",
-      lastInvoiceAmount: 1500,
-      riskLevel: "medium",
-      riskReason: "Scope stalled",
-    },
-  ];
+  const lastPaidByClient = new Map<string, number>();
+  for (const inv of mockDb.invoices) {
+    if (inv.status !== "paid") continue;
+    const cur = lastPaidByClient.get(inv.clientId) ?? 0;
+    lastPaidByClient.set(inv.clientId, Math.max(cur, inv.amount));
+  }
+
+  return mockDb.clients.map((c) => ({
+    id: c.id,
+    name: c.name,
+    status: c.status,
+    lastInvoiceAmount: lastPaidByClient.get(c.id) ?? 0,
+    riskLevel: c.riskLevel,
+    riskReason: c.riskReason,
+    lastTouchDaysAgo: c.lastTouchDaysAgo,
+  }));
 }
 
 export async function getMockProposals() {
-  return [
-    { id: "prop_1", client: "Acme Co", status: "sent", value: 6000 },
-    { id: "prop_2", client: "Northwind", status: "draft", value: 2400 },
-  ];
+  const nameById = new Map(mockDb.clients.map((c) => [c.id, c.name] as const));
+  return mockDb.proposals.map((p) => ({
+    id: p.id,
+    clientId: p.clientId,
+    client: nameById.get(p.clientId) ?? p.clientId,
+    title: p.title,
+    status: p.status,
+    value: p.value,
+    createdAt: p.createdAt,
+  }));
 }
 
 export async function getMockClientPortalSummary() {
   return {
     enabled: false,
     lastLogin: null,
-    notes: "Client Portal is a placeholder module (no auth/backend yet).",
+    notes: "Client Portal is a placeholder module (no auth/backend yet). Data below is coordinated mock-only.",
   };
 }

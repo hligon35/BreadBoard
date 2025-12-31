@@ -5,3 +5,4 @@ export * from "./Tabs";
 export * from "./TopStack";
 export * from "./Modal";
 export * from "./Placeholders";
+export * from "./charts/charts";

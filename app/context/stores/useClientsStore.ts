@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { getMockClients } from "@app/mock/services/crmService";
+import { getMockClientPortalSummary, getMockClients, getMockProposals } from "@app/mock/services/crmService";
 
 export type Client = {
   id: string;
@@ -8,17 +8,42 @@ export type Client = {
   lastInvoiceAmount: number;
   riskLevel?: "low" | "medium" | "high";
   riskReason?: string;
+  lastTouchDaysAgo?: number;
+};
+
+export type Proposal = {
+  id: string;
+  clientId: string;
+  client: string;
+  title?: string;
+  status: "draft" | "sent" | "accepted" | "rejected";
+  value: number;
+  createdAt?: string;
+};
+
+export type ClientPortalSummary = {
+  enabled: boolean;
+  lastLogin: string | null;
+  notes?: string;
 };
 
 type ClientsState = {
   clients: Client[];
+  proposals: Proposal[];
+  portalSummary: ClientPortalSummary | null;
   refresh: () => Promise<void>;
 };
 
 export const useClientsStore = create<ClientsState>((set) => ({
   clients: [],
+  proposals: [],
+  portalSummary: null,
   refresh: async () => {
-    const data = await getMockClients();
-    set({ clients: data });
+    const [clients, proposals, portalSummary] = await Promise.all([
+      getMockClients(),
+      getMockProposals(),
+      getMockClientPortalSummary(),
+    ]);
+    set({ clients, proposals, portalSummary });
   },
 }));

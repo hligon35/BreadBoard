@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 
-import { Button, Card, ChartPlaceholder, Col, H1, H2, Muted, Row, Tabs, TablePlaceholder } from "@ui/web";
+import { BarChart, Button, Card, Col, H1, H2, Muted, Row, Tabs } from "@ui/web";
 import { useWorkStore } from "@app/context/stores/useWorkStore";
 import { addMonths, formatMonthYear, getMonthGrid, getWeekdayLabels } from "@app/utils/calendar";
 import { formatShortDate } from "@app/utils/date";
@@ -88,6 +88,10 @@ const TwoCol = styled.div`
 export function WorkScreen() {
   const refresh = useWorkStore((s) => s.refresh);
   const summary = useWorkStore((s) => s.summary);
+  const board = useWorkStore((s) => s.board);
+  const tasks = useWorkStore((s) => s.tasks);
+  const calendarEvents = useWorkStore((s) => s.calendarEvents);
+  const forecast = useWorkStore((s) => s.forecast);
   const [tab, setTab] = useState("projects");
   const [month, setMonth] = useState(() => new Date());
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
@@ -192,12 +196,60 @@ export function WorkScreen() {
       <Tabs items={workTabs} activeKey={tab} onChange={setTab} />
 
       {tab === "projects" && (
+        <Row style={{ alignItems: "flex-start" }}>
+          {(board?.columns ?? []).map((col) => (
+            <Card key={col.key} style={{ flex: 1, minWidth: 240 }}>
+              <H2>{col.title}</H2>
+              <Col style={{ marginTop: 10, gap: 10 }}>
+                {col.cards.map((c) => (
+                  <Card key={c.id}>
+                    <Muted>{c.title}</Muted>
+                    {c.meta ? <Muted>{c.meta}</Muted> : null}
+                  </Card>
+                ))}
+                {col.cards.length === 0 ? <Muted>No cards</Muted> : null}
+              </Col>
+            </Card>
+          ))}
+          {!board ? (
+            <Card style={{ flex: 1 }}>
+              <Muted>Loading…</Muted>
+            </Card>
+          ) : null}
+        </Row>
+      )}
+      {tab === "tasks" && (
         <Card>
-          <Muted>Kanban placeholder</Muted>
-          <TablePlaceholder title="Kanban columns/cards" />
+          <Muted>Tasks</Muted>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr>
+                <th style={{ textAlign: "left" }}>Task</th>
+                <th style={{ textAlign: "left" }}>Client</th>
+                <th style={{ textAlign: "left" }}>Status</th>
+                <th style={{ textAlign: "left" }}>Due</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tasks.map((t) => (
+                <tr key={t.id}>
+                  <td>{t.title}</td>
+                  <td>{t.client ?? "—"}</td>
+                  <td>{t.status}</td>
+                  <td>{t.due ? new Date(t.due).toLocaleDateString() : "—"}</td>
+                </tr>
+              ))}
+              {tasks.length === 0 && (
+                <tr>
+                  <td colSpan={4}>
+                    <Muted>No tasks</Muted>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </Card>
       )}
-      {tab === "tasks" && <TablePlaceholder title="Task list" />}
       {tab === "calendar" && (
         <Card ref={calendarRef}>
           <CalendarNavRow>
@@ -303,9 +355,48 @@ export function WorkScreen() {
               </Row>
             </FormWrap>
           )}
+
+          <FormWrap>
+            <H2 style={{ fontSize: 14 }}>Upcoming events</H2>
+            {calendarEvents.slice(0, 8).map((e) => (
+              <Card key={e.id}>
+                <Muted>
+                  {new Date(e.start).toLocaleString()} • {e.title}
+                </Muted>
+              </Card>
+            ))}
+            {calendarEvents.length === 0 && <Muted>No events</Muted>}
+          </FormWrap>
         </Card>
       )}
-      {tab === "forecast" && <ChartPlaceholder title="Cash flow forecast" />}
+      {tab === "forecast" && (
+        <Row style={{ alignItems: "stretch" }}>
+          <Card style={{ flex: 1 }}>
+            <H2>Next 30 days</H2>
+            <Muted>
+              Income: {forecast ? `$${forecast.next30Days.expectedIncome.toLocaleString()}` : "—"} • Expenses:{" "}
+              {forecast ? `$${forecast.next30Days.expectedExpenses.toLocaleString()}` : "—"} • Net:{" "}
+              {forecast ? `$${forecast.next30Days.projectedNet.toLocaleString()}` : "—"}
+            </Muted>
+          </Card>
+          <Card style={{ flex: 1 }}>
+            <Muted>Forecast bars</Muted>
+            <div style={{ marginTop: 10 }}>
+              <BarChart
+                values={
+                  forecast
+                    ? [
+                        forecast.next30Days.expectedIncome,
+                        forecast.next30Days.expectedExpenses,
+                        Math.max(0, forecast.next30Days.projectedNet),
+                      ]
+                    : []
+                }
+              />
+            </div>
+          </Card>
+        </Row>
+      )}
     </Col>
   );
 }

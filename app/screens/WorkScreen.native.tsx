@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Alert, Linking, Pressable, StyleSheet, TextInput } from "react-native";
 import styled from "styled-components/native";
 
-import { Button, Card, ChartPlaceholder, Container, H1, H2, Row, Screen, Scroll, Tabs, TablePlaceholder } from "@ui/native";
+import { BarChart, Button, Card, Container, H1, H2, Muted, Row, Screen, Scroll, Tabs } from "@ui/native";
 import { useWorkStore } from "@app/context/stores/useWorkStore";
 import { addMonths, formatMonthYear, getMonthGrid, getWeekdayLabels } from "@app/utils/calendar";
 import { formatShortDate } from "@app/utils/date";
@@ -86,6 +86,10 @@ const Col = styled.View`
 export function WorkScreen() {
   const refresh = useWorkStore((s) => s.refresh);
   const summary = useWorkStore((s) => s.summary);
+  const board = useWorkStore((s) => s.board);
+  const tasks = useWorkStore((s) => s.tasks);
+  const calendarEvents = useWorkStore((s) => s.calendarEvents);
+  const forecast = useWorkStore((s) => s.forecast);
   const [tab, setTab] = useState("projects");
   const [month, setMonth] = useState(() => new Date());
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
@@ -187,8 +191,47 @@ export function WorkScreen() {
         <Container>
           <H1>Work</H1>
           <Tabs items={workTabs} activeKey={tab} onChange={setTab} />
-          {tab === "projects" && <TablePlaceholder title="Kanban placeholder" />}
-          {tab === "tasks" && <TablePlaceholder title="Tasks placeholder" />}
+          {tab === "projects" && (
+            <Scroll horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -18 }}>
+              <Row style={{ paddingHorizontal: 18, alignItems: "flex-start" }}>
+                {(board?.columns ?? []).map((col) => (
+                  <Card key={col.key} style={{ width: 260 }}>
+                    <H2>{col.title}</H2>
+                    {col.cards.map((c) => (
+                      <Card key={c.id}>
+                        <Muted>{c.title}</Muted>
+                        {c.meta ? <Muted>{c.meta}</Muted> : null}
+                      </Card>
+                    ))}
+                    {col.cards.length === 0 ? <Muted>No cards</Muted> : null}
+                  </Card>
+                ))}
+                {!board ? (
+                  <Card style={{ width: 260 }}>
+                    <Muted>Loading…</Muted>
+                  </Card>
+                ) : null}
+              </Row>
+            </Scroll>
+          )}
+          {tab === "tasks" && (
+            <Card>
+              <H2 style={{ fontSize: 14 }}>Tasks</H2>
+              {tasks.map((t) => (
+                <Card key={t.id}>
+                  <H2 style={{ fontSize: 13 }}>{t.title}</H2>
+                  <Row style={{ justifyContent: "space-between" }}>
+                    <H2 style={{ fontSize: 12, opacity: 0.75 }}>{t.client ?? "—"}</H2>
+                    <H2 style={{ fontSize: 12, opacity: 0.75 }}>{t.status}</H2>
+                  </Row>
+                  <H2 style={{ fontSize: 12, opacity: 0.75 }}>
+                    Due: {t.due ? new Date(t.due).toLocaleDateString() : "—"}
+                  </H2>
+                </Card>
+              ))}
+              {tasks.length === 0 && <H2 style={{ fontSize: 12, opacity: 0.75 }}>No tasks</H2>}
+            </Card>
+          )}
           {tab === "calendar" && (
             <Card>
               <CalendarNavRow>
@@ -287,9 +330,40 @@ export function WorkScreen() {
                   </Row>
                 </FormWrap>
               )}
+
+              <FormWrap>
+                <H2 style={{ fontSize: 14 }}>Upcoming events</H2>
+                {calendarEvents.slice(0, 8).map((e) => (
+                  <Card key={e.id}>
+                    <H2 style={{ fontSize: 13 }}>{e.title}</H2>
+                    <H2 style={{ fontSize: 12, opacity: 0.75 }}>{new Date(e.start).toLocaleString()}</H2>
+                  </Card>
+                ))}
+                {calendarEvents.length === 0 && <H2 style={{ fontSize: 12, opacity: 0.75 }}>No events</H2>}
+              </FormWrap>
             </Card>
           )}
-          {tab === "forecast" && <ChartPlaceholder title="Cash flow forecast" />}
+          {tab === "forecast" && (
+            <Card>
+              <H2 style={{ fontSize: 14 }}>Next 30 days</H2>
+              <Muted>
+                Income: {forecast ? `$${forecast.next30Days.expectedIncome.toLocaleString()}` : "—"} • Expenses:{" "}
+                {forecast ? `$${forecast.next30Days.expectedExpenses.toLocaleString()}` : "—"} • Net:{" "}
+                {forecast ? `$${forecast.next30Days.projectedNet.toLocaleString()}` : "—"}
+              </Muted>
+              <BarChart
+                values={
+                  forecast
+                    ? [
+                        forecast.next30Days.expectedIncome,
+                        forecast.next30Days.expectedExpenses,
+                        Math.max(0, forecast.next30Days.projectedNet),
+                      ]
+                    : []
+                }
+              />
+            </Card>
+          )}
         </Container>
       </Scroll>
     </Screen>

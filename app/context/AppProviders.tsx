@@ -3,11 +3,14 @@ import { ThemeProvider } from "styled-components";
 
 import { getTheme } from "@app/theme/themes";
 import { useThemeStore } from "@app/context/stores/useThemeStore";
+import { useBootstrapMockData } from "@app/hooks/useBootstrapMockData";
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   const mode = useThemeStore((s) => s.mode);
   const largeText = useThemeStore((s) => s.largeText);
   const highContrast = useThemeStore((s) => s.highContrast);
+
+  useBootstrapMockData();
 
   const theme = useMemo(() => {
     const t = getTheme(mode);

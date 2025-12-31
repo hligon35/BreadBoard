@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { getMockInsightsOverview } from "@app/mock/services/analyticsService";
+import { getMockInsightsOverview, getMockRevenueTrends } from "@app/mock/services/analyticsService";
 
 export type AISuggestion = {
   id: string;
@@ -27,15 +27,25 @@ export type InsightsOverview = {
   aiSuggestions: AISuggestion[];
 };
 
+export type RevenueTrendPoint = {
+  month: string;
+  value: number;
+};
+
 type InsightsState = {
   overview: InsightsOverview | null;
+  revenueTrends: RevenueTrendPoint[];
   refresh: () => Promise<void>;
 };
 
 export const useInsightsStore = create<InsightsState>((set) => ({
   overview: null,
+  revenueTrends: [],
   refresh: async () => {
-    const data = await getMockInsightsOverview();
-    set({ overview: data });
+    const [overview, revenueTrends] = await Promise.all([
+      getMockInsightsOverview(),
+      getMockRevenueTrends(),
+    ]);
+    set({ overview, revenueTrends });
   },
 }));

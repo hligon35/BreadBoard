@@ -1,5 +1,11 @@
 import { create } from "zustand";
-import { getMockKanbanBoard, getMockWorkSummary } from "@app/mock/services/projectsService";
+import {
+  getMockCalendarEvents,
+  getMockCashFlowForecast,
+  getMockKanbanBoard,
+  getMockTasks,
+  getMockWorkSummary,
+} from "@app/mock/services/projectsService";
 import { createId } from "@app/utils/id";
 
 export type WorkSummary = {
@@ -27,9 +33,36 @@ export type KanbanBoard = {
   columns: KanbanColumn[];
 };
 
+export type WorkTask = {
+  id: string;
+  title: string;
+  due: string;
+  status: "open" | "blocked" | "done";
+  clientId?: string;
+  client?: string;
+  projectId?: string;
+};
+
+export type CalendarEvent = {
+  id: string;
+  title: string;
+  start: string;
+};
+
+export type CashFlowForecast = {
+  next30Days: {
+    expectedIncome: number;
+    expectedExpenses: number;
+    projectedNet: number;
+  };
+};
+
 type WorkState = {
   summary: WorkSummary | null;
   board: KanbanBoard | null;
+  tasks: WorkTask[];
+  calendarEvents: CalendarEvent[];
+  forecast: CashFlowForecast | null;
   refresh: () => Promise<void>;
   addToBoard: (input: { title: string; meta?: string }) => void;
 };
@@ -37,9 +70,18 @@ type WorkState = {
 export const useWorkStore = create<WorkState>((set) => ({
   summary: null,
   board: null,
+  tasks: [],
+  calendarEvents: [],
+  forecast: null,
   refresh: async () => {
-    const [summary, board] = await Promise.all([getMockWorkSummary(), getMockKanbanBoard()]);
-    set({ summary, board });
+    const [summary, board, tasks, calendarEvents, forecast] = await Promise.all([
+      getMockWorkSummary(),
+      getMockKanbanBoard(),
+      getMockTasks(),
+      getMockCalendarEvents(),
+      getMockCashFlowForecast(),
+    ]);
+    set({ summary, board, tasks, calendarEvents, forecast });
   },
   addToBoard: ({ title, meta }) => {
     set((state) => {

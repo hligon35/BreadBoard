@@ -1,12 +1,13 @@
 import React from "react";
 import styled from "styled-components";
 import { Button } from "./Button";
-import { Row } from "./primitives";
 
 const TabWrap = styled.div`
   display: flex;
   gap: ${({ theme }) => theme.spacing.xs}px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
 `;
 
 const TabLabel = styled.span`
@@ -38,21 +39,19 @@ export function Tabs({
   onChange: (key: string) => void;
 }) {
   return (
-    <Row>
-      <TabWrap>
-        {items.map((it) => (
-          <Button
-            key={it.key}
-            variant={it.key === activeKey ? "primary" : "ghost"}
-            onClick={() => onChange(it.key)}
-          >
-            <TabLabel>
-              <span>{it.label}</span>
-              {it.badge !== undefined && it.badge !== null && <Badge>{it.badge}</Badge>}
-            </TabLabel>
-          </Button>
-        ))}
-      </TabWrap>
-    </Row>
+    <TabWrap>
+      {items.map((it) => (
+        <Button
+          key={it.key}
+          variant={it.key === activeKey ? "primary" : "ghost"}
+          onClick={() => onChange(it.key)}
+        >
+          <TabLabel>
+            <span>{it.label}</span>
+            {it.badge !== undefined && it.badge !== null && <Badge>{it.badge}</Badge>}
+          </TabLabel>
+        </Button>
+      ))}
+    </TabWrap>
   );
 }
